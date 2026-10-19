@@ -233,7 +233,8 @@ math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math","Noto Sans M
 .achip.clo{border-color:var(--violet);background:rgba(var(--violet-rgb),.12);color:var(--fg)}
 .achip.new{box-shadow:0 0 0 2px rgba(var(--new-rgb),.55)}
 .achip.todo{border-style:dashed;opacity:.6}
-.ulist .eq{overflow-x:auto;padding-bottom:2px}
+.ulist .eq{overflow-x:auto;padding-bottom:2px;margin:0}
+.ulist .sumline{overflow:visible;line-height:1.9}
 .ulist table{font-size:13px;min-width:0}
 .ulist th,.ulist td{padding:5px 8px}
 .ulist td:first-child,.ulist th:first-child{text-align:left}
@@ -1722,110 +1723,135 @@ function attachTreeHover(O) {
   cv.addEventListener('pointerleave', () => { if (FOCUS && FOCUS.node) FOCUS = null; setRich(treeInfo, msg(TREEMSG)); });
 }
 
-/* ================================================================ the necklace
-   The same recursion drawn as in the necklace picture: a piece is a row of beads joined by threads (bridges),
-   closed by its clasp (top edge) arched above; a bead is a vertex or a smaller necklace in its own capsule.
-   A piece's legs 0 and 1 are where the threads of the necklace around it attach (the capsule's two ports); its
-   other legs hang down as pendants and are passed outwards; the root's legs 0 and 1 are the external legs. */
-const NK = { VW: 14, G: 24, PAD: 9, CH: 18 };
-function neckLay(N, sub) {
-  const { VW, G, PAD, CH } = NK;
-  const beads = N.beads.map(b => (b.kind === 'v' ? { b, v: true } : { b, v: false, C: neckLay(sub(b.node), sub) }));
-  const rowH = Math.max(VW, ...beads.filter(q => !q.v).map(q => q.C.h));
-  let x = PAD;
-  beads.forEach((q, i) => { q.w = q.v ? VW : q.C.w; q.x = x; q.y = q.v ? 0 : CH + (rowH - q.C.h) / 2; x += q.w + (i < beads.length - 1 ? G : 0); });
-  return { N, beads, w: x + PAD, h: 2 * CH + rowH, yb: CH + rowH / 2 };
-}
+/* ================================================================ the necklace (workbench)
+   One flat box per necklace (one per loop of the diagram). In a box, the beads sit on the string joined by threads
+   (bridges) and the clasp (top edge) arches over them. A bead is a vertex or a finished smaller necklace, drawn as a
+   bead with its letter; the threads attach to its two ends. No wires: every leg carries a tag saying what it hangs
+   on, worked out by following the leg outwards: an external leg p or -p, or the end of a clasp t or thread u of an
+   outer necklace. Boxes are stacked by depth, the outermost necklace at the bottom. */
 function neckState(N, now) {
   const tp = revealP('t' + N.uid, now);
   let open = tp > 0;
   for (let k = 0; k < N.bridges.length && !open; k++) if (revealP('b' + N.uid + '_' + k, now) > 0) open = true;
   return { tp, open, closed: tp >= 1 };
 }
-const NECK = setupCanvas(document.getElementById('cvNeck'), 0.3, 150, 420);
+const NB = { VS: 28, CS: 42, G: 30, PAD: 14, TOP: 46, ROW: 14, TAG: 34, BOT: 4, GAPX: 14, GAPY: 12 };
+function neckBoxes(root, sub) {
+  const boxes = [], post = [], byNode = new Map();
+  (function visit(N, P, bi, depth) {
+    const box = { N, P, bi, depth, slots: [] };
+    boxes.push(box); byNode.set(N, box);
+    let x = NB.PAD;
+    N.beads.forEach((b, i) => {
+      const ch = b.kind === 'n' ? sub(b.node) : null;
+      const w = ch ? Math.max(NB.CS, (ch.n - 2) * NB.VS) : NB.VS;
+      box.slots.push({ b, ch, x, w }); x += w + (i < N.beads.length - 1 ? NB.G : 0);
+      if (ch) visit(ch, N, i, depth + 1);
+    });
+    box.w = Math.max(x + NB.PAD, 120); box.h = NB.TOP + NB.ROW + NB.TAG + NB.BOT;
+    post.push(box);
+  })(root, null, -1, 0);
+  /* what a leg (label lab of necklace N) hangs on: follow it outwards */
+  const tag = (N, lab) => {
+    for (;;) {
+      const box = byNode.get(N);
+      if (!box.P) return lab === 0 ? { t: 'p', ext: true } : { t: '−p', ext: true };
+      const P = box.P, i = box.bi, last = P.beads.length - 1;
+      if (lab === 0) return i === 0 ? { t: 't', s: null, P } : { t: 'u', s: i, P };
+      if (lab === 1) return i === last ? { t: 't', s: null, P } : { t: 'u', s: i + 1, P };
+      lab = P.beads[i].labels[lab - 2]; N = P;
+    }
+  };
+  return { boxes, post, byNode, tag };
+}
+const NECK = setupCanvas(document.getElementById('cvNeck'), 0.34, 230, 460);
 function drawNecklace(now) {
   const c = NECK.ctx, W = NECK.w, H = NECK.h;
   c.clearRect(0, 0, W, H);
   const vt = VIEW.tree; if (!vt || !vt.root || !VIEW.G || S.mode === 'diagram') return;
   const sub = n => (vt.swap && n === vt.swap.from) ? vt.swap.to : n, root = sub(vt.root);
-  if (!vt._lay) vt._lay = neckLay(root, sub);
-  const Lr = vt._lay, ext = 30;
-  const sc = Math.min(2.2, (W - 16) / Lr.w, (H - 12 - ext) / Lr.h), X0 = (W - Lr.w * sc) / 2, Y0 = Math.max(6, (H - Lr.h * sc - ext) / 2);
-  const P = (x, y) => [X0 + x * sc, Y0 + y * sc];
-  const LET = VIEW.letters || new Map(), last = VIEW.lastKey, fk = FOCUS && FOCUS.edge ? FOCUS.edge.key : null;
-  const lw = k => Math.max(1, k * Math.min(1.4, sc));
-  const font = px => `${Math.max(9, Math.round(px * Math.min(1.25, Math.max(0.75, sc))))}px "IBM Plex Mono", monospace`;
+  if (!vt._nb) vt._nb = neckBoxes(root, sub);
+  const NBX = vt._nb, LET = VIEW.letters || new Map(), last = VIEW.lastKey, fk = FOCUS && FOCUS.edge ? FOCUS.edge.key : null;
+  /* boxes in the order they are made (inside out for "Beads first"), wrapped into rows at the largest scale that fits */
+  const list = S.mode === 'global' && ORDER === 'beads' ? NBX.post : NBX.boxes, bh0 = NB.TOP + NB.ROW + NB.TAG + NB.BOT;
+  const wrap = sc => { const rows = [[]]; let x = 0; for (const q of list) { const w = q.w * sc; if (x > 0 && x + w > W - 12) { rows.push([]); x = 0; } rows[rows.length - 1].push(q); x += w + NB.GAPX * sc; } return rows; };
+  let sc = 1.5, rows = wrap(sc);
+  while (sc > 0.35 && (rows.length * bh0 * sc + (rows.length - 1) * NB.GAPY * sc > H - 10 || Math.max(...list.map(q => q.w)) * sc > W - 12)) { sc *= 0.93; rows = wrap(sc); }
+  const totH = rows.length * bh0 * sc + (rows.length - 1) * NB.GAPY * sc;
+  rows.forEach((r, k) => {
+    const rw = r.reduce((s2, q) => s2 + q.w * sc, 0) + NB.GAPX * sc * (r.length - 1);
+    let x = (W - rw) / 2; const y = Math.max(5, (H - totH) / 2) + k * (bh0 + NB.GAPY) * sc;
+    for (const q of r) { q.X = x; q.Y = y; x += (q.w + NB.GAPX) * sc; }
+  });
+  const fpx = px => Math.max(9, Math.round(px * Math.min(1.2, Math.max(0.8, sc))));
+  const mono = px => `${fpx(px)}px "IBM Plex Mono", monospace`, serif = px => `italic ${fpx(px)}px "Instrument Serif", serif`;
   const partial = (pts, p) => { const n = pts.length - 1, m = Math.max(1, Math.round(n * p)); c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i <= m; i++) c.lineTo(pts[i][0], pts[i][1]); c.stroke(); };
-  const bez = (a, b, cx1, cy1, cx2, cy2) => Array.from({ length: 25 }, (_, i) => { const t = i / 24, u = 1 - t; return [u * u * u * a[0] + 3 * u * u * t * cx1 + 3 * u * t * t * cx2 + t * t * t * b[0], u * u * u * a[1] + 3 * u * u * t * cy1 + 3 * u * t * t * cy2 + t * t * t * b[1]]; });
-  const wire = (a, b, below, col, w) => { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); c.moveTo(a[0], a[1]); c.bezierCurveTo(a[0], below, b[0], below, b[0], b[1]); c.stroke(); };
+  /* a symbol with a subscript, e.g. t_B or u_B2 */
+  const sym = (t, s, x, y, col, align) => {
+    c.font = serif(14); const w1 = c.measureText(t).width; c.font = mono(9.5); const w2 = s ? c.measureText(s).width : 0;
+    const x0 = align === 'center' ? x - (w1 + w2 + 1) / 2 : x;
+    c.fillStyle = col; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+    c.font = serif(14); c.fillText(t, x0, y); if (s) { c.font = mono(9.5); c.fillText(s, x0 + w1 + 1, y + 3); }
+  };
+  const tagSym = g => g.ext ? [g.t, '', TH.amber] : [g.t, (LET.get(g.P) || '?') + (g.s ? g.s : ''), g.t === 't' ? TH.violet : TH.muted];
   c.lineCap = 'round'; c.lineJoin = 'round';
-  /* returns the pendants that leave this piece downwards: [{ label, x }] in canvas units */
-  function piece(Lay, ox, oy, isRoot) {
-    const N = Lay.N, st = neckState(N, now), yb = oy + Lay.yb, bottom = oy + Lay.h, exits = [];
-    const [bx0, by0] = P(ox, oy), bw = Lay.w * sc, bh = Lay.h * sc, ybS = Y0 + yb * sc, botS = Y0 + bottom * sc;
-    /* capsule */
+  for (const q of NBX.boxes) {
+    const N = q.N, st = neckState(N, now), X = LET.get(N) || '?', bx = q.X, by = q.Y, bw = q.w * sc, bh = q.h * sc;
+    const yb = by + (NB.TOP + NB.ROW / 2) * sc, active = last && (last === 't' + N.uid || last.startsWith('b' + N.uid + '_'));
+    /* the box */
     c.save();
-    if (!st.open) { c.setLineDash([4, 4]); c.strokeStyle = TH.line2; c.lineWidth = 1.2; c.fillStyle = 'transparent'; }
-    else { c.fillStyle = `rgba(${TH.vrgb},${st.closed ? 0.08 : 0.03})`; c.strokeStyle = last === 't' + N.uid ? HI() : st.closed ? `rgba(${TH.vrgb},0.6)` : TH.line2; c.lineWidth = last === 't' + N.uid ? 2.2 : 1.1; }
-    c.beginPath(); c.roundRect ? c.roundRect(bx0, by0, bw, bh, Math.min(14, 0.25 * bh)) : c.rect(bx0, by0, bw, bh);
-    if (st.open) c.fill(); c.stroke(); c.restore();
-    const X = LET.get(N);
-    if (X && sc >= 0.45) { c.font = font(11); c.fillStyle = st.open ? TH.violet : TH.faint; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(X, bx0 + 4, by0 + 3); }
-    if (!st.open && bw > 70) {
-      c.font = font(10.5); c.fillStyle = TH.muted; c.textAlign = 'right'; c.textBaseline = 'bottom';
-      c.fillText(T(`${N.n} legs · ${plural(N.L, 'loop')}`, `${N.n} 腿 · ${N.L} 圈`), bx0 + bw - 5, by0 + bh - 2);
-    }
-    /* attachment points of each bead */
-    const att = Lay.beads.map(q => q.v ? { a: P(ox + q.x + NK.VW / 2, yb), b: P(ox + q.x + NK.VW / 2, yb) } : { a: P(ox + q.x, yb), b: P(ox + q.x + q.w, yb) });
-    /* children first, so threads and clasps sit on top */
-    Lay.beads.forEach(q => {
-      if (q.v) return;
-      const ch = piece(q.C, ox + q.x, oy + q.y, false);
-      for (const e of ch) {
-        const pl = q.b.labels[e.label - 2], from = [e.x, Y0 + (oy + q.y + q.C.h) * sc];
-        if (!st.open) continue;
-        if (pl === 0 || pl === 1) {
-          if (isRoot) { c.strokeStyle = TH.amber; c.lineWidth = lw(2); c.beginPath(); c.moveTo(from[0], from[1]); c.lineTo(from[0], botS + ext * 0.55); c.stroke(); c.font = font(11); c.fillStyle = TH.amber; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText(pl === 0 ? 'p' : '−p', from[0], botS + ext * 0.6); }
-          else wire(from, [pl === 0 ? bx0 : bx0 + bw, ybS], botS - 3, TH.fg, lw(1));
-        } else { c.strokeStyle = TH.fg; c.lineWidth = lw(1); c.beginPath(); c.moveTo(from[0], from[1]); c.lineTo(from[0], botS); c.stroke(); exits.push({ label: pl, x: from[0] }); }
-      }
-    });
-    /* threads (bridges) */
+    if (!st.open) { c.setLineDash([4, 4]); c.strokeStyle = TH.line2; c.lineWidth = 1.1; }
+    else { c.fillStyle = `rgba(${TH.vrgb},${st.closed ? 0.07 : 0.03})`; c.strokeStyle = active ? HI() : st.closed ? `rgba(${TH.vrgb},0.55)` : TH.line2; c.lineWidth = active ? 2 : 1.1; }
+    c.beginPath(); c.roundRect ? c.roundRect(bx, by, bw, bh, 10) : c.rect(bx, by, bw, bh); if (st.open) c.fill(); c.stroke(); c.restore();
+    c.font = mono(11); c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = st.open ? TH.fg : TH.muted;
+    let head = st.closed ? T(`${X} ✓ 1PI`, `${X} ✓ 1PI`) : st.open ? X : T(`${X} · ${N.n} legs · ${plural(N.L, 'loop')}`, `${X} · ${N.n} 腿 · ${N.L} 圈`);
+    if (c.measureText(head).width > bw - 12 * sc) head = st.open ? X : T(`${X} · ${N.L}L`, `${X} · ${N.L} 圈`);
+    if (c.measureText(head).width > bw - 12 * sc) head = X;
+    c.fillText(head, bx + 7 * sc, by + 5 * sc);
+    if (st.closed) { const note = q.P ? T(`bead of ${LET.get(q.P)}`, `${LET.get(q.P)} 的珠子`) : T('the diagram', '整张图'); if (c.measureText(head).width + c.measureText(note).width + 24 * sc < bw) { c.fillStyle = TH.muted; c.textAlign = 'right'; c.fillText(note, bx + bw - 7 * sc, by + 5 * sc); } }
+    /* bead positions and their two attachment points */
+    const pos = q.slots.map(sl => { const cx = bx + (sl.x + sl.w / 2) * sc; return sl.ch ? { cx, a: cx - 15 * sc, b: cx + 15 * sc } : { cx, a: cx, b: cx }; });
+    /* threads */
     for (let k = 0; k < N.bridges.length; k++) {
       const key = 'b' + N.uid + '_' + k, p = revealP(key, now); if (p <= 0) continue;
-      c.strokeStyle = fk === key ? TH.amber : last === key ? HI() : TH.muted; c.lineWidth = lw(last === key || fk === key ? 3 : 1.9);
-      partial([att[k].b, att[k + 1].a], p);
+      c.strokeStyle = fk === key ? TH.amber : last === key ? HI() : TH.muted; c.lineWidth = Math.max(1.2, (last === key || fk === key ? 3 : 1.9) * Math.min(1.2, sc));
+      partial([[pos[k].b, yb], [pos[k + 1].a, yb]], p);
+      if (p >= 1 && st.open && pos[k + 1].a - pos[k].b > 24) sym('u', X + (k + 1), (pos[k].b + pos[k + 1].a) / 2, yb + 15 * Math.min(1.2, sc), last === key ? HI() : TH.muted, 'center');
     }
     /* clasp */
     if (st.tp > 0) {
-      const A = att[0].a, B = att[att.length - 1].b, top = Y0 + (oy + 3) * sc, key = 't' + N.uid;
-      c.strokeStyle = fk === key ? TH.amber : last === key ? HI() : TH.violet; c.lineWidth = lw(last === key || fk === key ? 3.6 : 2.8);
-      if (TH.dark && last !== key) { c.shadowColor = c.strokeStyle; c.shadowBlur = 6; }
-      const arcPts = bez(A, B, A[0], top, B[0], top);
-      partial(arcPts, st.tp); c.shadowBlur = 0;
-      if (st.tp >= 1 && X && (B[0] - A[0]) > 34) {   /* t_X just above the top of the arc, on a small backing so nested labels stay legible */
-        const q = arcPts[12], col = c.strokeStyle, fs = Math.round(Math.max(12, 14 * Math.min(1.15, sc)));
-        c.font = font(9.5); const w2 = c.measureText(X).width;
-        c.fillStyle = TH.panel2; c.globalAlpha = 0.85; c.fillRect(q[0] - 7, q[1] - fs - 1, w2 + 13, fs + 1); c.globalAlpha = 1;
-        c.fillStyle = col; c.textBaseline = 'bottom'; c.textAlign = 'right';
-        c.font = `italic ${fs}px "Instrument Serif", serif`; c.fillText('t', q[0] + 1, q[1] - 1);
-        c.textAlign = 'left'; c.font = font(9.5); c.fillText(X, q[0] + 2, q[1] + 1);
-      }
+      const A = [pos[0].a, yb], B = [pos[pos.length - 1].b, yb], top = by + 26 * sc, key = 't' + N.uid;
+      const pts = Array.from({ length: 25 }, (_, i) => { const t = i / 24, u = 1 - t; return [u * u * u * A[0] + 3 * u * u * t * A[0] + 3 * u * t * t * B[0] + t * t * t * B[0], u * u * u * A[1] + 3 * u * u * t * top + 3 * u * t * t * top + t * t * t * B[1]]; });
+      c.strokeStyle = fk === key ? TH.amber : last === key ? HI() : TH.violet; c.lineWidth = Math.max(1.8, (last === key || fk === key ? 3.6 : 2.8) * Math.min(1.2, sc));
+      partial(pts, st.tp);
+      if (st.tp >= 1) sym('t', X, pts[12][0], pts[12][1] - 3, c.strokeStyle, 'center');
     }
-    /* vertex beads and their legs */
-    Lay.beads.forEach((q, i) => {
-      if (!q.v) return;
-      const [x, y] = att[i].a, l = q.b.label;
-      if (!st.open) { c.strokeStyle = TH.line2; c.lineWidth = 1; c.beginPath(); c.arc(x, y, Math.max(2, 3 * sc), 0, Math.PI * 2); c.stroke(); return; }
-      if (l === 0 || l === 1) {
-        if (isRoot) { c.strokeStyle = TH.amber; c.lineWidth = lw(2); c.beginPath(); c.moveTo(x, y); c.lineTo(x, botS + ext * 0.55); c.stroke(); c.font = font(11); c.fillStyle = TH.amber; c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText(l === 0 ? 'p' : '−p', x, botS + ext * 0.6); }
-        else wire([x, y], [l === 0 ? bx0 : bx0 + bw, ybS], Math.min(botS - 3, y + (botS - y) * 0.75), TH.fg, lw(1));
-      } else { c.strokeStyle = TH.fg; c.lineWidth = lw(1); c.beginPath(); c.moveTo(x, y); c.lineTo(x, botS); c.stroke(); exits.push({ label: l, x }); }
-      c.fillStyle = TH.fg; c.beginPath(); c.arc(x, y, Math.max(2.2, 3.4 * Math.min(1.3, sc)), 0, Math.PI * 2); c.fill();
+    /* beads and the tags on their legs */
+    q.slots.forEach((sl, i) => {
+      const P = pos[i], tagY = yb + (NB.ROW / 2 + 26) * sc;
+      if (!sl.ch) {
+        if (!st.open) { c.strokeStyle = TH.line2; c.lineWidth = 1; c.beginPath(); c.arc(P.cx, yb, 3.2, 0, Math.PI * 2); c.stroke(); return; }
+        const g = NBX.tag(N, sl.b.label), [t, s, col] = tagSym(g);
+        c.strokeStyle = col; c.lineWidth = g.ext ? 2 : 1.1; c.beginPath(); c.moveTo(P.cx, yb); c.lineTo(P.cx, tagY - 11 * Math.min(1.2, sc)); c.stroke();
+        sym(t, s, P.cx, tagY, col, 'center');
+        c.fillStyle = TH.fg; c.beginPath(); c.arc(P.cx, yb, Math.max(2.6, 3.6 * Math.min(1.2, sc)), 0, Math.PI * 2); c.fill();
+        return;
+      }
+      const cs = neckState(sl.ch, now), CX = LET.get(sl.ch) || '?', rx = 15 * sc, ry = 9.5 * sc;
+      c.save(); c.beginPath(); c.ellipse(P.cx, yb, rx, ry, 0, 0, Math.PI * 2);
+      if (cs.closed) { c.fillStyle = `rgba(${TH.vrgb},${TH.dark ? 0.45 : 0.3})`; c.fill(); c.strokeStyle = TH.violet; c.lineWidth = 1.4; c.stroke(); }
+      else { c.setLineDash([3, 3]); c.strokeStyle = cs.open ? TH.violet : TH.line2; c.lineWidth = 1.1; c.stroke(); }
+      c.restore();
+      c.font = mono(11); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = cs.closed ? TH.fg : TH.muted; c.fillText(CX, P.cx, yb + 0.5);
+      if (!st.open) return;
+      const pend = sl.b.labels;   /* the bead's own pendants: its legs 2, 3, ... */
+      pend.forEach((lab, j) => {
+        const px = P.cx + (j - (pend.length - 1) / 2) * NB.VS * sc * 0.9, g = NBX.tag(N, lab), [t, s, col] = tagSym(g);
+        c.strokeStyle = col; c.lineWidth = g.ext ? 2 : 1.1; c.beginPath(); c.moveTo(P.cx + (px - P.cx) * 0.5, yb + ry * 0.8); c.lineTo(px, tagY - 11 * Math.min(1.2, sc)); c.stroke();
+        sym(t, s, px, tagY, col, 'center');
+      });
     });
-    return exits;
   }
-  piece(Lr, 0, 0, true);
 }
 
 /* hovering an edge of the diagram lights up its ring and its arc in the tree */
@@ -2451,6 +2477,10 @@ function updateUList() {
     }
     if (terms.length > K) h += `<tr><td>${rich(T(`the other ${(terms.length - K).toLocaleString('en-US')} terms`, `其余 ${(terms.length - K).toLocaleString('en-US')} 项`))}</td><td class="mono">${fmt(U - terms.slice(0, K).reduce((s, t) => s + Math.exp(t.l), 0), 4)}</td><td class="mono">${(100 * (1 - terms.slice(0, K).reduce((s, t) => s + Math.exp(t.l - lU), 0))).toFixed(1)}%</td></tr>`;
     h += `<tr><td>${rich(T('all terms: $U$', '全部之和：$U$'))}</td><td class="mono">${fmt(U, 4)}</td><td class="mono">100%</td></tr></tbody></table></div>`;
+    const S1 = Math.exp(d.lsa);
+    h += `<p class="eq sumline">${rich('$Σ_e α_e$ = ' + sig.map(e => `$${sub(e)}$`).join(' + '))}</p>`;
+    h += `<p class="eq sumline">${rich('= ' + sig.map(e => `$${a(e)}$`).join(' + ') + ` = $${fmt(S1, 5)}$`)}</p>`;
+    h += `<div class="eq">${rich(T(`$(Σ_e α_e)^{−ω} = ${fmt(S1, 5)}^{−${fmtN(D.omG)}} = ${fmt(Math.exp(-D.omG * d.lsa), 4)}$, with $ω = E − \\frac{3L}{2} = ${D.E} − \\frac{3·${D.L}}{2} = ${fmtN(D.omG)}$`, `$(Σ_e α_e)^{−ω} = ${fmt(S1, 5)}^{−${fmtN(D.omG)}} = ${fmt(Math.exp(-D.omG * d.lsa), 4)}$，其中 $ω = E − \\frac{3L}{2} = ${D.E} − \\frac{3·${D.L}}{2} = ${fmtN(D.omG)}$`))}</div>`;
     h += `<div class="eq">${rich(`$\\frac{U^{tr}}{U} = ${fmt(Math.exp(d.lUtr - lU), 4)}, \\quad (Σ_e α_e)^{−ω} = ${fmt(Math.exp(-D.omG * d.lsa), 4)}, \\quad w = {(\\frac{U^{tr}}{U})}^{3/2}(Σ_e α_e)^{−ω} = ${fmt(Math.exp(d.logw), 4)}$`)}</div>`;
   }
   if (uList.__src !== h) { uList.__src = h; uList.innerHTML = h; }
