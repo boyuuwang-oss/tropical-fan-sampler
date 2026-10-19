@@ -1,0 +1,1939 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+</head>
+<body>
+<title>Tropical Fan Sampler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+/* Layout: a live lab bench read top to bottom in the order a sample is made.
+   Fan (where the sample lands) | graph (what was drawn) -> step tracker + narration ->
+   recursion tree | Schwinger parameters (how this one diagram was drawn) -> estimates | spread ->
+   per-diagram shares -> explainers. Dark-first, light theme mirrored. */
+:root{
+  --bg:#0b0a17; --panel:#131129; --panel-2:#1a1735; --line:#2a2650; --line-2:#3b3672;
+  --fg:#edebff; --muted:#a6a1cc; --faint:#6b6699;
+  --violet:#968aff; --violet-rgb:150,138,255; --amber:#ffb84d; --amber-rgb:255,184,77;
+  --teal:#41e2bb; --teal-rgb:65,226,187; --coral:#ff7474;
+  --new:#ff7ad9; --new-rgb:255,122,217;
+  --dot0:#3a3290; --dot1:#8c7dff; --dot2:#ffb84d; --dot3:#fff4d6; --is-dark:1;
+  --f-display:"Instrument Serif","Iowan Old Style","Times New Roman",serif;
+  --f-body:"IBM Plex Sans","PingFang SC","Hiragino Sans GB","Noto Sans SC",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f6f5fc; --panel:#ffffff; --panel-2:#f0eefa; --line:#e0dcf2; --line-2:#c8c2e8;
+    --fg:#1a1733; --muted:#565179; --faint:#9a95bd;
+    --violet:#5a49d6; --violet-rgb:90,73,214; --amber:#c47500; --amber-rgb:196,117,0;
+    --teal:#0a957a; --teal-rgb:10,149,122; --coral:#d23f3a;
+    --new:#c4167f; --new-rgb:196,22,127;
+    --dot0:#d4cff3; --dot1:#7466e0; --dot2:#e88a00; --dot3:#9c3a0a; --is-dark:0;
+    color-scheme:light;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f6f5fc; --panel:#ffffff; --panel-2:#f0eefa; --line:#e0dcf2; --line-2:#c8c2e8;
+  --fg:#1a1733; --muted:#565179; --faint:#9a95bd;
+  --violet:#5a49d6; --violet-rgb:90,73,214; --amber:#c47500; --amber-rgb:196,117,0;
+  --teal:#0a957a; --teal-rgb:10,149,122; --coral:#d23f3a;
+  --new:#c4167f; --new-rgb:196,22,127;
+  --dot0:#d4cff3; --dot1:#7466e0; --dot2:#e88a00; --dot3:#9c3a0a; --is-dark:0;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--f-body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1480px;margin:0 auto;padding-inline:clamp(12px,2vw,28px);padding-block:14px 170px;display:grid;gap:16px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.zh{font-family:var(--f-body)}
+h1,h2,h3{text-wrap:balance;margin:0;font-weight:500}
+p{margin:0}
+
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px;padding-block:2px}
+.top .lede{font-size:14px;max-width:90ch;flex:1 1 360px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,3vw,42px);line-height:1;letter-spacing:-.01em;margin:0}
+h1 em{color:var(--violet);font-style:italic}
+.lede{color:var(--muted);max-width:60ch}
+.lede + .lede{margin-top:6px}
+.keys{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted)}
+.key{display:inline-flex;align-items:center;gap:8px}
+.sw{width:22px;height:4px;border-radius:2px;display:inline-block;flex:none}
+.sw.v{background:var(--violet)} .sw.n{background:var(--new)} .sw.a{background:var(--amber)} .sw.t{background:var(--teal)} .sw.c{background:var(--coral)} .sw.m{background:var(--muted)}
+
+.rail{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;padding:2px;gap:2px;background:var(--panel-2)}
+.seg button,.btn{font:500 13px/1 var(--f-body);color:var(--muted);background:transparent;border:0;border-radius:7px;padding:9px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--violet);color:var(--bg)}
+.seg button:hover:not([aria-pressed="true"]),.btn:hover{color:var(--fg)}
+.btn{border:1px solid var(--line-2);background:var(--panel-2);color:var(--fg)}
+.btn.primary{background:rgba(var(--violet-rgb),.18);border-color:var(--violet)}
+.btn.ghost{background:transparent}
+.field{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+select,input[type=range]{accent-color:var(--violet)}
+select{font:500 13px var(--f-mono);color:var(--fg);background:var(--panel-2);border:1px solid var(--line-2);border-radius:7px;padding:7px 8px}
+output{font-family:var(--f-mono);color:var(--fg);min-width:2ch;display:inline-block}
+.dock{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom, 0px));z-index:50;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 10px;padding:8px 10px;border:1px solid var(--line-2);border-radius:18px;background:var(--panel);box-shadow:0 12px 32px rgba(var(--violet-rgb),.22);width:max-content;max-width:calc(100vw - 20px)}
+.dock .seg button{padding:8px 10px;white-space:nowrap}
+.dock .btn{border-radius:999px;padding:9px 14px;white-space:nowrap;flex:none}
+.dock .dstep{font:12.5px var(--f-mono);color:var(--amber);white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;max-width:22ch}
+.dock .vsep{width:1px;height:24px;background:var(--line-2)}
+.dock .kdot{margin:0 6px;color:var(--muted)}
+.dock kbd{font:500 11.5px var(--f-mono);padding:1px 6px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;background:var(--panel-2);color:var(--fg)}
+@media (max-width:700px){.dock .vsep{display:none}}
+/* sticky narration bar, then three scenes of two big panels each */
+.narrbar{position:sticky;top:env(safe-area-inset-top, 0px);z-index:40;background:var(--panel);border:1px solid var(--line-2);border-radius:12px;padding:7px 12px;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,420px);gap:5px 18px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.narrbar .steps{grid-column:1 / -1}
+.narrbar .steps li{font-size:12px;padding:2px 9px 2px 2px}
+.narrbar .steps li .n{width:19px;height:19px;font-size:11px}
+.narrbar .narr-body{grid-column:1;font-size:13.5px;min-height:4.35em;align-content:start;line-height:1.45}
+.narrbar #nEn,.narrbar #nZh{font-size:13.5px}
+.narrbar .nb-side{grid-column:2;grid-row:2;display:grid;gap:3px;align-content:start;min-height:58px;min-width:0}
+.narrbar #wText,.narrbar .betameta{font-size:11.5px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.narrbar .betameta{gap:10px}
+.narrbar .meter{height:6px}
+#cvSched{height:40px}
+.narrbar .math{padding-top:0;border-top:0;font-size:11.5px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scene{gap:12px}
+.scene .pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.insight{font-size:14.5px;max-width:110ch;padding:10px 14px;border-left:3px solid var(--violet);background:var(--panel-2)}
+.fan-notes{margin:0;padding-left:18px;display:grid;gap:3px;font-size:12.5px;color:var(--muted)}
+@media (max-width:820px){.narrbar{position:static;grid-template-columns:minmax(0,1fr)}.narrbar .nb-side{grid-column:1;grid-row:auto}.scene .pair{grid-template-columns:minmax(0,1fr)}}
+.stage{display:grid;grid-template-columns:minmax(250px,310px) minmax(0,1fr);gap:14px;align-items:start}
+.quad{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.stage .narr .steps li{font-size:12.5px;padding:4px 10px 4px 4px}
+.stage .narr .steps li .n{width:22px;height:22px}
+.stage #nEn,.stage #nZh{font-size:14.5px}
+@media (max-width:1100px){.stage{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:700px){.quad{grid-template-columns:minmax(0,1fr)}}
+button:focus-visible,select:focus-visible,input:focus-visible,tr:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px;min-width:0;margin:0}
+.card-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.card-head h2{font-family:var(--f-display);font-size:26px;font-weight:400;letter-spacing:.005em}
+.card-head h2 .zh,.pane-head h3 .zh,.explain h3 .zh{font-family:var(--f-body);font-weight:500;font-size:.8em}
+html:not([data-lang="zh"]) .zh{display:none!important}
+html[data-lang="zh"] .en{display:none!important}
+html:not([data-mode="ais"]) .only-ais{display:none!important}
+html[data-mode="ais"] .only-global{display:none!important}
+.hint{font-size:12.5px;color:var(--muted)}
+canvas{display:block;width:100%;touch-action:manipulation}
+.two{display:grid;grid-template-columns:minmax(0,1.38fr) minmax(0,1fr);gap:18px;align-items:start}
+.two.even{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.dotk{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.opscale{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.opscale i{display:block;flex:0 1 200px;height:8px;border-radius:4px;background:linear-gradient(90deg,rgba(var(--violet-rgb),.05),rgba(var(--violet-rgb),.3) 45%,var(--violet))}
+.opscale b{font-weight:500;color:var(--fg)}
+
+.inspect{display:grid;grid-template-columns:176px minmax(0,1fr);gap:14px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:134px}
+.inspect canvas{width:176px;height:112px;border-radius:6px;background:var(--panel)}
+.inspect .txt{display:grid;gap:4px;font-size:12.5px;min-width:0}
+.inspect b{font-weight:500;font-size:13.5px}
+
+.weigh{display:grid;gap:6px}
+.meter{height:8px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
+.meter span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--violet),var(--amber))}
+#wText{font-size:12.5px;color:var(--muted)}
+.betabar{display:grid;gap:6px}
+.betatrack{position:relative;height:10px;border-radius:5px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
+.betatrack span{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,rgba(var(--teal-rgb),.35),var(--teal));transition:width .35s ease}
+.betameta{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted)}
+
+.narr{border-color:var(--line-2);gap:14px}
+.steps{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.steps li{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border:1px solid var(--line-2);border-radius:999px;font-size:13px;color:var(--muted);transition:border-color .25s,color .25s}
+.steps li .n{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--panel-2);font:500 12px var(--f-mono);color:var(--muted)}
+.steps li small{font-size:12px;color:var(--faint)}
+.steps li.done .n{background:rgba(var(--violet-rgb),.28);color:var(--fg)}
+.steps li.on{border-color:var(--amber);color:var(--fg);background:rgba(var(--amber-rgb),.08)}
+.steps li.on .n{background:var(--amber);color:var(--bg)}
+.narr-body{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;min-height:56px}
+#nEn{font-size:16px}
+#nZh{font-size:16px}
+.narr .math{font-size:13px;color:var(--violet);padding-top:10px;border-top:1px dashed var(--line-2)}
+.narr.flash .narr-body > *,.narr.flash .math{animation:rise .45s ease both}
+@keyframes rise{from{opacity:.35}to{opacity:1}}
+.status{font:12.5px var(--f-mono);color:var(--muted);min-height:3.2em}
+.build{gap:14px}
+.build .narr{background:var(--panel-2);border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;display:grid;gap:12px}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.pane{margin:0;display:grid;gap:8px;min-width:0;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.pane-head{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;min-width:0;min-height:3.2em;align-content:flex-start}
+.pane-head h3{flex:none}
+.pane-head .hint{min-width:0}
+.pane-head h3{font-family:var(--f-display);font-size:21px;font-weight:400}
+.rules{margin:0;padding-left:22px;display:grid;gap:10px;font-size:13.5px;max-width:110ch}
+.rules li::marker{color:var(--violet);font-family:var(--f-mono)}
+.rules b{font-weight:500}
+.rules .zh,.rules .en{display:block}
+@media (max-width:920px){.pair{grid-template-columns:minmax(0,1fr)}}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:right;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{font-weight:500;color:var(--muted);font-size:12px;letter-spacing:.04em}
+tbody th{text-align:left;font-weight:500}
+tbody th .sw{margin-right:8px;vertical-align:middle}
+td.big{font-size:15px;color:var(--fg)}
+.est table{min-width:560px}
+.refline{font-size:13px;color:var(--muted)}
+.refline b{color:var(--fg);font-weight:500}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line-2)}
+.pill.ok{color:var(--teal);border-color:rgba(var(--teal-rgb),.5)}
+.pill.warn{color:var(--amber);border-color:rgba(var(--amber-rgb),.5)}
+.pill.bad{color:var(--coral);border-color:var(--coral)}
+
+.dg table{min-width:720px}
+.dg td,.dg th{text-align:left;vertical-align:middle}
+.dg td.num,.dg th.num{text-align:right}
+.dg tbody tr{cursor:pointer}
+.dg tbody tr:hover,.dg tbody tr.sel{background:rgba(var(--violet-rgb),.08)}
+.dg canvas{width:84px;height:48px;border-radius:6px;background:var(--panel-2)}
+.bar{display:flex;align-items:center;gap:8px;min-width:170px}
+.bar i{display:block;height:9px;border-radius:5px;min-width:2px}
+.bar.v i{background:var(--violet)} .bar.a i{background:var(--amber)} .bar.t i{background:var(--teal)}
+.bar span{font:12.5px var(--f-mono);color:var(--muted)}
+
+.explain{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.explain .card{gap:10px;align-content:start}
+.explain h3{font-family:var(--f-display);font-size:24px;font-weight:400}
+.explain p{font-size:14px}
+.explain p.zh{color:var(--fg)}
+.explain .math{font-family:var(--f-mono);font-size:12.5px;color:var(--violet);background:var(--panel-2);border-radius:8px;padding:8px 10px;overflow-x:auto;white-space:nowrap}
+footer{font-size:12.5px;color:var(--faint);max-width:90ch}
+
+@media (max-width:920px){
+  .top,.two,.two.even{grid-template-columns:minmax(0,1fr)}
+  .explain{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:460px){.inspect{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion: reduce){
+  .narr.flash .narr-body > *,.narr.flash .math{animation:none}
+  .meter span,.betatrack span{transition:none}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Tropical Fan <em>Sampler</em></h1>
+    <p class="eyebrow">φ³ · d = 3 · two-point ·</p>
+    <label class="field" for="selL"><span class="en">Loops L</span><span class="zh">圈数 L</span> <select id="selL"></select></label>
+    <p class="lede en">Monte Carlo grows Feynman diagrams on the moduli space, weighs them, and anneals them toward the true integrand, live in your browser.</p>
+    <p class="lede zh">蒙特卡罗在模空间上长出费曼图、给它们加权，再退火到真实被积函数；一切都在浏览器里实时计算。</p>
+  </header>
+
+  <div class="narrbar narr" id="narr" aria-live="polite">
+    <ol class="steps" id="steps"></ol>
+    <div class="narr-body">
+      <p id="nEn" class="en">Press Next step to watch one diagram being drawn, one edge at a time.</p>
+      <p id="nZh" class="zh">按“下一步”，看一张图怎样一条边一条边地画出来。</p>
+    </div>
+    <div class="nb-side">
+      <div class="weigh">
+        <div class="meter" aria-hidden="true"><span id="wFill"></span></div>
+        <p id="wText" class="mono">w = (U^tr/U)^{3/2} · Π u^δ</p>
+      </div>
+      <div class="betabar" id="betaBox" hidden>
+        <canvas id="cvSched" data-inset="0" role="img" aria-label="Schedule of this annealing run: one column per round of beta, one row per move"></canvas>
+        <div class="betameta mono"><span id="betaTxt">β = 0</span><span id="logWTxt">log W = 0</span></div>
+      </div>
+      <p id="nMath" class="mono math">s_L = P₂(L) · E_μ[w]</p>
+    </div>
+  </div>
+
+  <section class="card scene">
+    <div class="card-head"><h2><span class="en">1 · Where the draw lands</span><span class="zh">1 · 样本落在哪里</span></h2><p class="hint only-global"><span class="en">Left: the moduli space as a tropical fan, one cone per diagram, glued along faces (5 cones drawn; each draw is placed in one of them). The needle is this draw’s top edge t. Right: the diagram this draw produced.</span><span class="zh">左：画成热带扇的模空间，每张图一个锥，锥沿公共面粘合（只画出 5 个锥，每个样本画在其中一个里）。指针是这次样本的顶边 t。右：这次抽到的图。</span></p><p class="hint only-ais"><span class="en">Left: the moduli space as a tropical fan (5 cones drawn). The teal trail is the annealing chain moving between cones; teal dots are where finished runs ended. Right: the chain’s current diagram.</span><span class="zh">左：画成热带扇的模空间（只画出 5 个锥）。青色路径是退火链在锥之间的移动，青色点是已完成各轮的终点。右：链当前的图。</span></p></div>
+    <div class="pair">
+      <figure class="pane">
+        <div class="pane-head"><h3><span class="en">Tropical fan · moduli space</span><span class="zh">热带扇 · 模空间</span></h3><p class="hint"><span class="en">schematic · 5 of the many cones</span><span class="zh">示意图 · 众多锥中的 5 个</span></p></div>
+        <canvas id="cvFan" data-inset="20" role="img" aria-label="Moduli space drawn as a fan of cones, with sampled points"></canvas>
+        <ul class="fan-notes" id="fanNotes" hidden>
+          <li><span class="en">One cell per cubic graph G — (0,1)ᴱ / Aut G, u = 1 − e⁻ᵅ</span><span class="zh">每张三价图 G 一个锥： (0,1)ᴱ / Aut G，u = 1 − e⁻ᵅ</span></li>
+          <li><span class="en">Shared face: one αₑ → 0 — 4-valent vertex, cells glued</span><span class="zh">公共面：某个 αₑ → 0， 四价顶点，锥在此粘合</span></li>
+          <li><span class="en">Level set: top-edge u = t — radial density ω t^(ω−1)</span><span class="zh">等值面：顶边 u = t， 径向密度 ω t^(ω−1)</span></li>
+          <li><span class="en">Rim t → 1 (top α → ∞) — at large L the tropical mass sits here</span><span class="zh">边缘 t → 1（顶边 α → ∞）： 大 L 时热带质量集中在这里</span></li>
+        </ul>
+      </figure>
+      <figure class="pane">
+        <div class="pane-head"><h3><span class="en">Current diagram</span><span class="zh">当前的图</span></h3><p class="hint mono gmeta"></p></div>
+        <canvas id="cvGraph" data-inset="20" role="img" aria-label="The Feynman diagram currently being sampled"></canvas>
+      </figure>
+    </div>
+    <p class="status" id="fanInfo"></p>
+    <div class="legend">
+      <span class="only-global"><i class="dotk" style="background:var(--amber)"></i><span class="en">draw with large w</span><span class="zh">w 大的样本</span></span>
+      <span class="only-global"><i class="dotk" style="background:var(--violet)"></i><span class="en">draw with small w</span><span class="zh">w 小的样本</span></span>
+      <span class="only-ais"><i class="dotk" style="background:var(--teal)"></i><span class="en">chain state now (pulsing) and its trail</span><span class="zh">链的当前状态（闪动）和它走过的路径</span></span>
+      <span class="only-ais"><i class="dotk" style="background:var(--teal);opacity:.4"></i><span class="en">end points of finished runs</span><span class="zh">已完成各轮的终点</span></span>
+      <span class="only-global"><span class="sw v"></span><span class="en">needle = top edge t</span><span class="zh">指针 = 顶边 t</span></span>
+      <span><span class="sw a"></span><span class="en">external leg</span><span class="zh">外腿</span></span>
+      <span class="only-global"><span class="sw n"></span><span class="en">just drawn</span><span class="zh">刚画出</span></span>
+      <span class="only-ais"><span class="sw t"></span><span class="en">just regrown (accepted)</span><span class="zh">刚重长（被接受）</span></span>
+      <span class="only-ais"><span class="sw c"></span><span class="en">rejected move</span><span class="zh">被拒绝的移动</span></span>
+    </div>
+  </section>
+
+  <section class="card scene">
+    <div class="card-head"><h2><span class="en">2 · How the diagram is built</span><span class="zh">2 · 这张图怎样造出来</span></h2><p class="hint"><span class="en">Left: the recursion tree. Right: the same diagram. Ring A is the loop through top edge A; each smaller ring is a piece drawn by the same rule. Hover either side to see the match.</span><span class="zh">左：递推树。右：同一张图。环 A 是经过顶边 A 的圈；每个更小的环是按同样规则画出的一块。悬停任一边可看到对应关系。</span></p></div>
+    <div class="pair">
+      <figure class="pane">
+        <div class="pane-head"><h3><span class="en">Recursion tree</span><span class="zh">递推树</span></h3><p class="hint"><span class="en">one ring per loop · same letters as the diagram</span><span class="zh">每个圈一个环 · 字母与图相同</span></p></div>
+        <canvas id="cvTree" data-inset="20" role="img" aria-label="Recursion tree of the current diagram"></canvas>
+      </figure>
+      <figure class="pane">
+        <div class="pane-head"><h3><span class="en">Current diagram</span><span class="zh">当前的图</span></h3><p class="hint mono gmeta"></p></div>
+        <canvas id="cvGraph2" data-inset="20" role="img" aria-label="The Feynman diagram currently being sampled"></canvas>
+      </figure>
+    </div>
+    <p class="status" id="treeInfo"></p>
+    <div class="legend">
+      <span><span class="sw v"></span><span class="en">top edge · A, B, C… name the rings</span><span class="zh">顶边 · A、B、C… 是环的名字</span></span>
+      <span><span class="sw m"></span><span class="en">bridge</span><span class="zh">桥</span></span>
+      <span><i class="dotk" style="background:var(--fg)"></i><span class="en">vertex</span><span class="zh">顶点</span></span>
+      <span><span class="sw a"></span><span class="en">external leg</span><span class="zh">外腿</span></span>
+      <span><span class="sw" style="background:rgba(var(--violet-rgb),.35);height:7px"></span><span class="en">piece with loops → its own ring</span><span class="zh">含圈的子图 → 自己的环</span></span>
+      <span class="only-global"><span class="sw" style="background:none;border-top:1.5px dashed var(--line-2);height:0"></span><span class="en">planned, not drawn yet</span><span class="zh">计划中，尚未画出</span></span>
+      <span class="only-global"><span class="sw n"></span><span class="en">just drawn</span><span class="zh">刚画出</span></span>
+      <span class="only-ais"><span class="sw t"></span><span class="en">just regrown (accepted)</span><span class="zh">刚重长（被接受）</span></span>
+      <span class="only-ais"><span class="sw c"></span><span class="en">rejected move</span><span class="zh">被拒绝的移动</span></span>
+      <span class="only-ais"><span class="sw a"></span><span class="en">picked for this move</span><span class="zh">这次移动选中的部分</span></span>
+      <span class="only-ais"><i class="dotk" style="background:var(--teal);border-radius:2px"></i><span class="en">grid at top right: column = round of β, row = move; teal kept, coral rejected, pale = edge redraw</span><span class="zh">右上角格子：列 = β 的回合，行 = 移动；青色保留，珊瑚色拒绝，浅色 = 重抽一条边</span></span>
+    </div>
+    <ol class="rules">
+      <li><span class="en"><b>A ring is one loop of the diagram.</b> Its thick violet arc is the top edge, the largest u in that piece; the same letter marks that edge in the diagram. Going round the rest of the ring you meet beads joined by gray bridges, and every bridge is shorter than the top edge.</span><span class="zh"><b>一个环就是图里的一个圈。</b>粗紫弧是顶边，即这块里最大的 u；图里同一个字母标出这条边。沿环的其余部分是由灰色桥连起的珠子，每座桥都比顶边短。</span></li>
+      <li><span class="en"><b>A bead is a vertex or a smaller piece.</b> A dot is one vertex (an amber stub means it carries an external leg). A thick light segment is a piece that still has loops; it is drawn by the same rule as its own ring, one column to the right.</span><span class="zh"><b>珠子是一个顶点或一块更小的子图。</b>点是单个顶点（琥珀短线表示带外腿）；粗浅色段是仍含圈的子图，它按同样的规则画成右边一列里自己的环。</span></li>
+      <li class="only-global"><span class="en"><b>Each Next draws one edge.</b> First a ring's top edge, whose dashed part is the plan for its chain; then, along the chain, its bridges and inner rings in order. The new edge is pink in the diagram, the tree and the bars. The click after the last edge is Weight: it gives w, drops the point on the fan and updates the estimate at once; % labels then show how far the true U agrees with the tropical U^tr, and coral marks where w loses weight.</span><span class="zh"><b>每按一次“下一步”画一条边。</b>先画一个环的顶边（虚线部分是这条链的计划），再沿着链依次画桥和里面的环。新画的边在图、树和柱状图里都是粉色。最后一条边之后的那一下是“权重”：同时给出 w、把点落到扇上并更新估计值；百分比显示真实 U 与热带 U^tr 的一致程度，珊瑚色标出权重损失的地方。</span></li>
+      <li class="only-ais"><span class="en"><b>Each Next is one step of the annealing chain.</b> Raise β a little and bank Δβ·log w, or make one move: regrow a ring and everything inside it from the exact tropical rule (teal if accepted, coral if rejected), or redraw one edge. After K steps of β the run ends and its weight W lands on the fan.</span><span class="zh"><b>每按一次“下一步”是退火链的一步。</b>把 β 升高一点并记下 Δβ·log w，或者做一次移动：按精确的热带规则重长一个环和它里面的一切（被接受为青色，被拒绝为珊瑚色），或者重抽一条边。β 走完 K 步后这一轮结束，它的权重 W 落到扇上。</span></li>
+    </ol>
+  </section>
+
+  <section class="card scene">
+    <div class="card-head"><h2><span class="en">3 · What is actually sampled</span><span class="zh">3 · 真正被抽的是什么</span></h2><p class="hint"><span class="en">Left: the recursion tree again. Right: the u of every edge, largest first.</span><span class="zh">左：还是递推树。右：每条边的 u，从大到小。</span></p></div>
+    <div class="pair">
+      <figure class="pane">
+        <div class="pane-head"><h3><span class="en">Recursion tree</span><span class="zh">递推树</span></h3><p class="hint"><span class="en">one ring per loop · same letters as the diagram</span><span class="zh">每个圈一个环 · 字母与图相同</span></p></div>
+        <canvas id="cvTree2" data-inset="20" role="img" aria-label="Recursion tree of the current diagram"></canvas>
+      </figure>
+      <figure class="pane">
+        <div class="pane-head"><h3><span class="en">Its Schwinger parameters</span><span class="zh">它的 Schwinger 参数</span></h3><p class="hint"><span class="en">largest first: this order is the Hepp sector</span><span class="zh">从大到小：这个顺序就是 Hepp 扇区</span></p></div>
+        <canvas id="cvParams" data-inset="20" role="img" aria-label="Edge parameters of the current diagram sorted from largest to smallest"></canvas>
+      </figure>
+    </div>
+    <p class="status" id="pText"></p>
+    <div class="legend">
+      <span><span class="sw v"></span><span class="en">top edge of a ring (letter = the ring)</span><span class="zh">环的顶边（字母 = 那个环）</span></span>
+      <span><span class="sw m"></span><span class="en">bridge</span><span class="zh">桥</span></span>
+      <span><i class="dotk" style="background:var(--amber)"></i><span class="en">closes a loop: exactly the rings’ top edges, and U^tr is their product</span><span class="zh">闭合一个圈：恰好就是各环的顶边，U^tr 是它们的乘积</span></span>
+      <span><b class="mono" style="font-weight:500;color:var(--fg)">96</b> <span class="en">above a bar or on an edge = agreement with U^tr (%)</span><span class="zh">柱上或边上的数 = 与 U^tr 的一致程度（%）</span></span>
+    </div>
+    <p class="insight en">This is all the sampler draws: a tree of rings and one u per edge. The probability of a draw and the tropical weight U^tr = Π (top edge of each ring) follow from these alone, so no list of diagrams is ever made. The diagram is glued together from the tree only to compute the true U, and with it w = (U^tr/U)^{3/2}·Πu^δ.</p>
+    <p class="insight zh">采样器抽的只有这些：一棵环的树，加上每条边一个 u。一个样本的概率和热带权重 U^tr = Π（每个环的顶边）只由它们决定，所以从不需要图的列表。只有在计算真实的 U、从而得到 w = (U^tr/U)^{3/2}·Πu^δ 时，才把树拼成一张具体的图。</p>
+  </section>
+
+  <section class="two">
+    <div class="card est">
+      <div class="card-head"><h2><span class="en">Estimates</span><span class="zh">估计值</span></h2><p class="hint"><span class="en">same L, two samplers, one reference</span><span class="zh">同一个 L，两种采样，一个参考值</span></p></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th scope="col"><span class="en">method</span><span class="zh">方法</span></th><th scope="col">ŝ_L</th><th scope="col"><span class="en">rel. error</span><span class="zh">相对误差</span></th><th scope="col"><span class="en">pull vs ref.</span><span class="zh">与参考值的偏差</span></th><th scope="col"><span class="en">samples</span><span class="zh">样本数</span></th><th scope="col">Var log w</th><th scope="col"><span class="en">largest share</span><span class="zh">最大份额</span></th></tr></thead>
+          <tbody>
+            <tr id="rowG"><th scope="row"><span class="sw a"></span><span class="en">Global tropical</span><span class="zh">全局热带</span></th><td class="big mono">—</td><td class="mono">—</td><td>—</td><td class="mono">0</td><td class="mono">—</td><td class="mono">—</td></tr>
+            <tr id="rowA"><th scope="row"><span class="sw t"></span><span class="en">Annealed importance sampling</span><span class="zh">退火重要性采样</span></th><td class="big mono">—</td><td class="mono">—</td><td>—</td><td class="mono">0</td><td class="mono">—</td><td class="mono">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="refline" id="refLine"></p>
+      <p class="hint"><span class="en">“Largest share” is the biggest single weight divided by the sum of all weights. Near 1 means one sample dominates and the error bar cannot be trusted.</span><span class="zh">“最大份额”是最大的单个权重除以所有权重之和。接近 1 表示一个样本主导，误差不可信。</span></p>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2><span class="en">Log-weight spread</span><span class="zh">权重分布</span></h2></div>
+      <canvas id="cvHist" role="img" aria-label="Histogram of log w for global sampling and log W for AIS"></canvas>
+      <p class="hint mono" id="histMeta"></p>
+      <p class="hint"><span class="en">Amber: log w of independent tropical draws. Teal: log W of annealed-importance-sampling runs. A narrower teal curve is the whole point of annealing.</span><span class="zh">琥珀色是独立热带样本的 log w，青色是退火重要性采样的 log W；青色更窄就是退火的意义。</span></p>
+    </div>
+  </section>
+
+  <section class="card dg">
+    <div class="card-head">
+      <h2><span class="en">Each diagram’s share</span><span class="zh">每张图的贡献</span></h2>
+      <p class="hint"><span class="only-global"><span class="en">from the global tropical draws at this L</span><span class="zh">来自这个 L 的全局热带样本</span></span><span class="only-ais"><span class="en">from the annealed runs at this L</span><span class="zh">来自这个 L 的各轮退火</span></span></p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col">#</th><th scope="col"><span class="en">diagram</span><span class="zh">图</span></th><th scope="col"><span class="only-global"><span class="en">tropical measure picks it</span><span class="zh">热带测度抽中的频率</span></span><span class="only-ais"><span class="en">runs start here (violet) / end here (teal)</span><span class="zh">从这里出发（紫）/ 在这里结束（青）</span></span></th><th scope="col"><span class="en">true share of s_L</span><span class="zh">在 s_L 中的真实份额</span></th><th scope="col" class="num"><span class="en">its contribution s_G</span><span class="zh">这张图的贡献 s_G</span></th><th scope="col" class="num"><span class="only-global"><span class="en">mean w</span><span class="zh">平均 w</span></span><span class="only-ais"><span class="en">mean W of runs ending here</span><span class="zh">在此结束的各轮平均 W</span></span></th></tr></thead>
+        <tbody id="dgBody"></tbody>
+      </table>
+    </div>
+    <p class="hint" id="dgNote"></p>
+    <p class="hint only-global"><span class="en">The tropical measure picks diagram G with probability p_G (violet). Its true share of s_L is p_G·E[w | G]/E[w] (amber). The weight w is exactly what turns the violet bar into the amber one.</span><span class="zh">热带测度以概率 p_G 抽中图 G（紫色）；它在 s_L 中的真实份额是 p_G·E[w | G]/E[w]（琥珀色）。权重 w 正是把紫色变成琥珀色的那一步。</span></p>
+    <p class="hint only-ais"><span class="en">Each run starts at a tropical draw (violet), and annealing moves the chain toward the true measure, so where runs end (teal) drifts toward the true share (amber). The contribution uses the weight W of each run at its end: s_G = P₂·mean(W·[run ends in G]), unbiased for any K.</span><span class="zh">每一轮从一个热带样本出发（紫色），退火把链推向真实测度，所以各轮的终点（青色）向真实份额（琥珀色）靠拢。贡献用每轮终点的权重 W：s_G = P₂·mean(W·[该轮停在 G])，对任何 K 都无偏。</span></p>
+  </section>
+
+  <section class="explain">
+    <article class="card">
+      <h3><span class="en">The space</span><span class="zh">空间</span></h3>
+      <p class="en">Every 1PI two-point cubic diagram G with E = 3L−1 edges is one cone, the cube (0,1)ᴱ/Aut G in u = 1 − e^{−α}. Cones meet at the UV apex and are glued where an edge length shrinks to zero. Inside a cone, U^tr is a single monomial in each Hepp sector.</p>
+      <p class="zh">每张 E = 3L−1 条边的三价 1PI 两点图是一个锥，即 u = 1 − e^{−α} 坐标下的 (0,1)ᴱ/Aut G。所有锥在 UV 顶点相交，并在某条边长缩为零的地方粘合。锥内每个 Hepp 扇区里 U^tr 只是一个单项式。</p>
+      <p class="math">μ_δ = Π u^{−δ} · (U^tr)^{−3/2} du / |Aut G|,  degree ω_δ = (1−δ)E − 3L/2</p>
+    </article>
+    <article class="card only-global">
+      <h3><span class="en">Global tropical</span><span class="zh">全局热带</span></h3>
+      <p class="en">Draw the largest edge t first. Cutting it leaves a chain of beads joined by bridges below t, and each bead is a smaller 1PI graph drawn the same way one scale down. The draw is exact from μ_δ, so no list of diagrams is ever needed. Then reweight by w ≤ 1.</p>
+      <p class="zh">先抽最大的边 t。剪开它，剩下一条由桥连起的珠子链，桥都小于 t；每个珠子是更小的 1PI 图，在下一个尺度上用同样的规则抽。抽样精确服从 μ_δ，不需要图的列表。最后用 w ≤ 1 加权。</p>
+      <p class="math">ω_δ(n,L) P_n(L) = ½ ch(n, L−1),   ŝ_L = P₂(L) · mean(w)</p>
+    </article>
+    <article class="card only-ais">
+      <h3><span class="en">Annealed importance sampling</span><span class="zh">退火重要性采样</span></h3>
+      <p class="en">Start from one exact tropical draw and raise β from 0 to 1 in K steps, banking Δβ·log w at each step. In between, Markov moves leave μ_δ·w^β invariant: regrow a whole subtree from the exact tropical rule (a jump to another wedge), or redraw one edge (same wedge). Accept with (w′/w)^β.</p>
+      <p class="zh">从一个精确的热带样本出发，用 K 步把 β 从 0 升到 1，每步记下 Δβ·log w。中间用保持 μ_δ·w^β 不变的马尔可夫移动：按精确热带规则重长一整棵子树（跳到另一个楔形），或重抽一条边（留在同一楔形）。接受率 (w′/w)^β。</p>
+      <p class="math">E[W] = s_L / P₂(L) for every K,   Var log W ≈ V_f + c/K</p>
+    </article>
+  </section>
+
+  <footer>
+    <p class="en">This page runs a JavaScript port of the global tropical sampler (exact tables, top-edge generator, Kron reduction for U) and of the annealed-importance-sampling kernel (subtree regrowth, bridge and top-edge redraws) described in I. Moult and B. Wang, “Instanton Structure from 325-Loop Perturbation in 3D φ³ Theory”. It is a teaching copy, not the production code. Reference values s_L are those tabulated in the paper (exact for L = 1, 2). Diagrams are identified up to isomorphism by a colour-refinement hash with the two external vertices marked; above 24 diagrams the fan pools them into 24 bins, while the share table still lists them one by one. The angle inside a wedge is the mean of u/t over the edges, a one-number summary of the diagram's shape.</p>
+    <p class="zh">本页在浏览器里运行全局热带采样器（精确表、顶边生成器、用 Kron 约化计算 U）和退火重要性采样核（子树重生成、桥和顶边重抽）的 JavaScript 移植版，方法见 I. Moult 与 B. Wang 的论文 “Instanton Structure from 325-Loop Perturbation in 3D φ³ Theory”。它是教学用的副本，不是生产代码。参考值 s_L 取自论文中的表格（L = 1、2 为精确值）。图按同构类区分（标记两个外顶点的颜色细化哈希）；超过 24 张图时扇把它们合并成 24 个分箱，贡献表仍逐一列出。楔形内的角度是各边 u/t 的平均值，是图形状的一个单数概括。</p>
+  </footer>
+</div>
+
+<div class="dock" role="toolbar" aria-label="Controls">
+  <div class="seg" id="segMode" role="group" aria-label="Method">
+    <button type="button" data-v="global" aria-pressed="true"><span class="en">Global tropical</span><span class="zh">全局热带</span></button>
+    <button type="button" data-v="ais" aria-pressed="false"><span class="en">Annealed importance sampling</span><span class="zh">退火重要性采样</span></button>
+  </div>
+  <div class="seg" id="segSpeed" role="group" aria-label="Speed">
+    <button type="button" data-v="slow" aria-pressed="true"><span class="en">Slow</span><span class="zh">慢</span></button>
+    <button type="button" data-v="quick" aria-pressed="false"><span class="en">Quick</span><span class="zh">快</span></button>
+    <button type="button" data-v="bulk" aria-pressed="false"><span class="en">Bulk</span><span class="zh">批量</span></button>
+  </div>
+  <label class="field" id="fieldK" for="rngK" title="Changing K restarts the annealing statistics" hidden><span class="en">β steps K</span><span class="zh">β 步数 K</span> <input type="range" id="rngK" min="2" max="48" value="20"> <output id="outK" for="rngK">20</output></label>
+  <span class="vsep" aria-hidden="true"></span>
+  <button type="button" class="btn primary" id="btnPlay"><span id="playTxt">Pause</span><span class="kdot">·</span><kbd><span class="en">Space</span><span class="zh">空格</span></kbd></button>
+  <button type="button" class="btn" id="btnStep"><span class="en">Next step</span><span class="zh">下一步</span><span class="kdot">·</span><kbd>→</kbd></button>
+  <button type="button" class="btn ghost" id="btnClear"><span class="en">Clear</span><span class="zh">清空</span></button>
+  <span class="vsep" aria-hidden="true"></span>
+  <div class="seg" id="segLang" role="group" aria-label="Language">
+    <button type="button" data-v="en" aria-pressed="true">EN</button>
+    <button type="button" data-v="zh" aria-pressed="false">中文</button>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+/* ================================================================ physics core (global tropical sampler) */
+const DELTA = 0.12, BR = 1 / (1 - DELTA);
+/* reference s_L as [value, 1σ absolute error]: the paper's table (L = 1, 2 exact: √π/2, π/6) */
+const REF = [null, [0.8862269254527579, 0], [0.5235987755982988, 0], [0.82919257, 7.5e-6],
+  [1.7754713, 2.3e-5], [4.4934150, 6.7e-5], [12.746739, 2.3e-4],
+  [39.456159, 7.9e-4], [131.22787, 2.9e-3], [464.46232, 1.1e-2],
+  [1738.3950, 5.2e-2], [6851.1259, 0.21], [28345.123, 0.91],
+  [122850.38, 4.1], [556882.64, 19], [2636944.2, 95],
+  [13030422, 510], [67135540, 2800], [360345410, 15000]];
+const LMAX = 18;
+
+function sfc32(a, b, c, d) {
+  return function () {
+    a |= 0; b |= 0; c |= 0; d |= 0;
+    const t = (((a + b) | 0) + d) | 0; d = (d + 1) | 0; a = b ^ (b >>> 9);
+    b = (c + (c << 3)) | 0; c = (c << 21) | (c >>> 11); c = (c + t) | 0; return t >>> 0;
+  };
+}
+function makeRng(seed) {
+  const g = sfc32(0x9e3779b9, seed, 0x243f6a88 ^ seed, 0xb7e15162);
+  for (let i = 0; i < 16; i++) g();
+  return function () { const hi = g() >>> 5, lo = g() >>> 6; return (hi * 67108864 + lo + 0.5) / 9007199254740992; };
+}
+let rng = makeRng((Math.random() * 0x7fffffff) | 0);
+
+function omega(n, L) { return (1 - DELTA) * (3 * L - 3 + n) - 1.5 * L; }
+
+function buildTables(L) {
+  const n0 = 2, NM = n0 + 2 * L + 2, W = L + 1, KAP = Math.max(1, 0.9 * L);
+  const BT = new Float64Array((NM + 1) * W), CT = new Float64Array((NM + 1) * W);
+  BT[1 * W + 0] = 1;
+  for (let l = 0; l <= L; l++) {
+    const nb = Math.min(NM, n0 + 2 * (L - l) + 2);
+    if (l >= 1) for (let n = 2; n <= nb; n++) BT[(n - 2) * W + l] = CT[n * W + l - 1] * n * (n - 1) / (2 * omega(n, l) * KAP);
+    for (let n = 0; n <= nb; n++) {
+      let s = BT[n * W + l];
+      for (let j = 0; j <= n; j++) for (let lp = 0; lp <= l; lp++) {
+        if (j === n && lp === l) continue;
+        const bb = BT[j * W + lp]; if (bb === 0) continue;
+        s += BR * bb * CT[(n - j) * W + (l - lp)];
+      }
+      CT[n * W + l] = s;
+    }
+  }
+  return { L, NM, W, BT, CT, KAP, logP2: Math.log(BT[0 * W + L]) + L * Math.log(KAP) };
+}
+
+let UID = 0;
+function gen1PI(T, n, L, lscale, depth, parent) {
+  const node = { uid: ++UID, n, L, depth, parent, lt: lscale + Math.log(rng()) / omega(n, L), beads: [], bridges: [] };
+  const { BT, CT, W } = T;
+  let lab = []; for (let i = 0; i < n; i++) lab.push(i);
+  let nn = n, l = L - 1;
+  for (;;) {
+    let r = rng() * CT[nn * W + l];
+    const b0 = BT[nn * W + l];
+    if (r < b0) { node.beads.push(makeBead(T, nn, l, lab, node)); break; }
+    r -= b0;
+    let pj = -1, pl = -1;
+    outer: for (let j = 0; j <= nn; j++) for (let lp = 0; lp <= l; lp++) {
+      if (j === nn && lp === l) continue;
+      const bb = BT[j * W + lp]; if (bb === 0) continue;
+      const w = BR * bb * CT[(nn - j) * W + (l - lp)];
+      if (r < w) { pj = j; pl = lp; break outer; }
+      r -= w;
+    }
+    if (pj < 0) {
+      fb: for (let j = nn; j >= 0; j--) for (let lp = l; lp >= 0; lp--) {
+        if (j === nn && lp === l) continue;
+        if (BT[j * W + lp] !== 0 && CT[(nn - j) * W + (l - lp)] !== 0) { pj = j; pl = lp; break fb; }
+      }
+    }
+    for (let i = 0; i < pj; i++) {
+      let k = i + Math.floor(rng() * (nn - i)); if (k >= nn) k = nn - 1;
+      const tmp = lab[i]; lab[i] = lab[k]; lab[k] = tmp;
+    }
+    node.beads.push(makeBead(T, pj, pl, lab.slice(0, pj), node));
+    node.bridges.push(node.lt + Math.log(rng()) / (1 - DELTA));
+    lab = lab.slice(pj); nn -= pj; l -= pl;
+  }
+  return node;
+}
+function makeBead(T, j, l, labels, parent) {
+  if (l === 0) return { kind: 'v', uid: ++UID, label: labels[0] };
+  return { kind: 'n', labels: labels.slice(), node: gen1PI(T, j + 2, l, parent.lt, parent.depth + 1, parent) };
+}
+
+function flatten(root) {
+  const vkey = [], edges = [];
+  const addv = k => { vkey.push(k); return vkey.length - 1; };
+  function doNode(node, legv) {
+    const ins = [], outs = [];
+    for (const b of node.beads) {
+      if (b.kind === 'v') { const v = addv('v' + b.uid); legv[b.label] = v; ins.push(v); outs.push(v); }
+      else {
+        const lv = new Array(b.node.n); doNode(b.node, lv);
+        ins.push(lv[0]); outs.push(lv[1]);
+        for (let i = 0; i < b.labels.length; i++) legv[b.labels[i]] = lv[2 + i];
+      }
+    }
+    edges.push({ a: ins[0], b: outs[outs.length - 1], lu: node.lt, kind: 'top', node, key: 't' + node.uid });
+    for (let k = 0; k < node.bridges.length; k++)
+      edges.push({ a: outs[k], b: ins[k + 1], lu: node.bridges[k], kind: 'br', node, key: 'b' + node.uid + '_' + k });
+  }
+  const legv = [0, 0];
+  doNode(root, legv);
+  return { vkey, edges, ext: legv, nv: vkey.length };
+}
+
+function kron(G, la) {
+  const nv = G.nv, a = G.ext[0], b = G.ext[1];
+  const map = new Int32Array(nv); let k = 0;
+  for (let v = 0; v < nv; v++) if (v !== a && v !== b) map[v] = k++;
+  map[a] = k++; if (b !== a) map[b] = k++;
+  const m = k;
+  let lmin = Infinity, lmax = -Infinity, sumlog = 0;
+  for (let e = 0; e < la.length; e++) { lmin = Math.min(lmin, la[e]); lmax = Math.max(lmax, la[e]); sumlog += la[e]; }
+  const s0 = -0.5 * (lmin + lmax);
+  const C = new Float64Array(m * m);
+  for (let e = 0; e < G.edges.length; e++) {
+    const p = map[G.edges[e].a], q = map[G.edges[e].b]; if (p === q) continue;
+    const c = Math.exp(-(la[e] + s0)); C[p * m + q] += c; C[q * m + p] += c;
+  }
+  let logdet = 0, lR = NaN;
+  for (let v = 0; v < m - 1; v++) {
+    let S = 0; for (let u = v + 1; u < m; u++) S += C[v * m + u];
+    logdet += Math.log(S); const inv = 1 / S;
+    for (let u = v + 1; u < m; u++) {
+      const f = C[v * m + u] * inv; if (f === 0) continue;
+      for (let w = u + 1; w < m; w++) { const add = f * C[v * m + w]; C[u * m + w] += add; C[w * m + u] += add; }
+    }
+    if (v === m - 3) lR = -Math.log(C[(m - 2) * m + (m - 1)]) - s0;
+  }
+  if (m === 2) lR = -Math.log(C[1]) - s0;
+  return { lU: sumlog + logdet + s0 * (m - 1), lR };
+}
+
+/* log U for an arbitrary connected multigraph (self-loops allowed: they only contribute their alpha) */
+function logUgen(nv, ea, eb, la) {
+  let lmin = Infinity, lmax = -Infinity, sumlog = 0;
+  for (let e = 0; e < la.length; e++) { lmin = Math.min(lmin, la[e]); lmax = Math.max(lmax, la[e]); sumlog += la[e]; }
+  const s0 = -0.5 * (lmin + lmax), m = nv, C = new Float64Array(m * m);
+  for (let e = 0; e < la.length; e++) { const p = ea[e], q = eb[e]; if (p === q) continue; const c = Math.exp(-(la[e] + s0)); C[p * m + q] += c; C[q * m + p] += c; }
+  let logdet = 0;
+  for (let v = 0; v < m - 1; v++) {
+    let S = 0; for (let u = v + 1; u < m; u++) S += C[v * m + u];
+    logdet += Math.log(S); const inv = 1 / S;
+    for (let u = v + 1; u < m; u++) {
+      const f = C[v * m + u] * inv; if (f === 0) continue;
+      for (let w = u + 1; w < m; w++) { const add = f * C[v * m + w]; C[u * m + w] += add; C[w * m + u] += add; }
+    }
+  }
+  return sumlog + logdet + s0 * (m - 1);
+}
+/* Per-edge agreement with the tropical picture. Under the true U each spanning tree T carries weight
+   Π_{f∉T} α_f / U, so edge e lies in the tree with probability p_e = U_{G/e} / U (and Σ_e p_e = V − 1).
+   U^tr keeps only the tree T*: p = 1 on T*, p = 0 on the L loop-closing edges. The agreement is the
+   probability that the true measure treats e the same way: p_e on T*, 1 − p_e off it. */
+function edgeAgreement(G, Wt) {
+  const ne = G.edges.length, nv = G.nv, la = new Float64Array(ne);
+  for (let e = 0; e < ne; e++) { const lu = G.edges[e].lu, u = Math.exp(lu); la[e] = Math.log(u < 0.5 ? -Math.log1p(-u) : -Math.log(-Math.expm1(lu))); }
+  const out = new Map(); let sumP = 0;
+  for (let e = 0; e < ne; e++) {
+    const x = G.edges[e].a, y = G.edges[e].b, ren = new Int32Array(nv); let k = 0;
+    for (let v = 0; v < nv; v++) if (v !== y) ren[v] = k++;
+    ren[y] = ren[x];
+    const ea = [], eb = [], l2 = [];
+    for (let f = 0; f < ne; f++) if (f !== e) { ea.push(ren[G.edges[f].a]); eb.push(ren[G.edges[f].b]); l2.push(la[f]); }
+    const pIn = Math.min(1, Math.exp(logUgen(nv - 1, ea, eb, l2) - Wt.lU));
+    sumP += pIn;
+    out.set(G.edges[e].key, Wt.closingKeys.has(G.edges[e].key) ? 1 - pIn : pIn);
+  }
+  out.sumP = sumP;
+  return out;
+}
+
+function weigh(G) {
+  const ne = G.edges.length, nv = G.nv;
+  const ord = Array.from({ length: ne }, (_, i) => i).sort((x, y) => G.edges[x].lu - G.edges[y].lu);
+  const par = new Int32Array(nv); for (let i = 0; i < nv; i++) par[i] = i;
+  const find = a => { while (par[a] !== a) { par[a] = par[par[a]]; a = par[a]; } return a; };
+  let lUtr = 0, sumlu = 0, closing = 0;
+  const closingKeys = new Set();
+  for (const e of ord) {
+    const E = G.edges[e], x = find(E.a), y = find(E.b);
+    if (x === y) { lUtr += E.lu; closing++; closingKeys.add(E.key); } else par[x] = y;
+    sumlu += E.lu;
+  }
+  const la = new Float64Array(ne);
+  for (let e = 0; e < ne; e++) {
+    const lu = G.edges[e].lu, u = Math.exp(lu);
+    la[e] = Math.log(u < 0.5 ? -Math.log1p(-u) : -Math.log(-Math.expm1(lu)));
+  }
+  const { lU, lR } = kron(G, la);
+  return { logw: 1.5 * (lUtr - lU) + DELTA * sumlu, lUtr, lU, lR, closing, sumlu, closingKeys };
+}
+
+function topoKey(G) {
+  const nv = G.nv, adj = Array.from({ length: nv }, () => []);
+  for (const E of G.edges) { adj[E.a].push(E.b); adj[E.b].push(E.a); }
+  let col = new Array(nv).fill(0); col[G.ext[0]] = 1; col[G.ext[1]] = 1;
+  let ncol = 2, sig = null;
+  for (let it = 0; it < nv + 1; it++) {
+    sig = col.map((c, v) => c + ':' + adj[v].map(u => col[u]).sort((x, y) => x - y).join(','));
+    const uniq = [...new Set(sig)].sort();
+    const idx = new Map(uniq.map((s, i) => [s, i]));
+    const nc = sig.map(s => idx.get(s));
+    const stable = uniq.length === ncol && it > 0;
+    col = nc; ncol = uniq.length;
+    if (stable) break;
+  }
+  const es = G.edges.map(E => { const x = col[E.a], y = col[E.b]; return x < y ? x + '-' + y : y + '-' + x; }).sort().join('|');
+  return sig.slice().sort().join(';') + '#' + es;
+}
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+function revealOrder(root) {
+  const out = [];
+  (function visit(node) {
+    out.push({ key: 't' + node.uid, node, top: true });
+    node.beads.forEach((b, k) => {
+      if (b.kind === 'n') visit(b.node);
+      if (k < node.bridges.length) out.push({ key: 'b' + node.uid + '_' + k, node, top: false });
+    });
+  })(root);
+  return out;
+}
+function subtreeKeys(node) {
+  const s = new Set();
+  (function v(n) { s.add('t' + n.uid); n.bridges.forEach((_, k) => s.add('b' + n.uid + '_' + k)); for (const b of n.beads) if (b.kind === 'n') v(b.node); })(node);
+  return s;
+}
+
+class AisRun {
+  constructor(T, L, K) {
+    this.T = T; this.L = L; this.K = K; this.k = 0; this.logW = 0; this.left = 0; this.acc = 0; this.tries = 0; this.hist = [];
+    this.root = gen1PI(T, 2, L, 0, 0, null); this.G = flatten(this.root); this.Wt = weigh(this.G);
+  }
+  nodes() { const out = []; (function v(n) { out.push(n); for (const b of n.beads) if (b.kind === 'n') v(b.node); })(this.root); return out; }
+  replace(oldN, newN) {
+    const par = oldN.parent;
+    if (!par) this.root = newN; else for (const b of par.beads) if (b.kind === 'n' && b.node === oldN) b.node = newN;
+    newN.parent = par;
+  }
+  advance() {
+    if (this.left > 0) { this.left--; return this.move(); }
+    if (this.k >= this.K) return { type: 'done' };
+    const b0 = this.k / this.K, b1 = (this.k + 1) / this.K, inc = (b1 - b0) * this.Wt.logw;
+    this.logW += inc; this.k++; this.left = this.k < this.K ? this.L : 0; this.hist.push([]);
+    return { type: 'beta', b0, b1, inc };
+  }
+  /* one Metropolis move at the current beta: subtree regrowth, bridge redraw or top-edge redraw */
+  move() {
+    const beta = this.k / this.K, nodes = this.nodes(), r = rng();
+    const oldG = this.G, oldW = this.Wt;
+    let kind, undo, info = {};
+    if (r < 0.6) {
+      kind = 'regen';
+      const node = nodes[Math.floor(rng() * nodes.length)];
+      const par = node.parent, nw = gen1PI(this.T, node.n, node.L, par ? par.lt : 0, node.depth, par);
+      this.replace(node, nw); undo = () => this.replace(nw, node);
+      info = { loops: node.L, legs: node.n, depth: node.depth, from: node, to: nw };
+    } else if (r < 0.8) {
+      const cand = nodes.filter(n => n.bridges.length > 0);
+      if (!cand.length) { const Hh = this.hist[this.hist.length - 1]; if (Hh) Hh.push('N'); return { type: 'move', kind: 'none', beta }; }
+      kind = 'bridge';
+      const node = cand[Math.floor(rng() * cand.length)], i = Math.floor(rng() * node.bridges.length);
+      const old = node.bridges[i];
+      node.bridges[i] = node.lt + Math.log(rng()) / (1 - DELTA);
+      undo = () => { node.bridges[i] = old; };
+      info = { key: 'b' + node.uid + '_' + i, from: old, to: node.bridges[i], depth: node.depth };
+    } else {
+      kind = 'top';
+      const node = nodes[Math.floor(rng() * nodes.length)];
+      let lo = -Infinity;
+      for (const x of node.bridges) lo = Math.max(lo, x);
+      for (const b of node.beads) if (b.kind === 'n') lo = Math.max(lo, b.node.lt);
+      const hi = node.parent ? node.parent.lt : 0, a = 0.5 + DELTA;
+      const ylo = Math.exp(-a * hi), yhi = Math.exp(-a * lo);
+      const old = node.lt;
+      node.lt = -Math.log(ylo + rng() * (yhi - ylo)) / a;
+      undo = () => { node.lt = old; };
+      info = { key: 't' + node.uid, from: old, to: node.lt, depth: node.depth };
+    }
+    const propG = flatten(this.root), propW = weigh(propG);
+    const ratio = Math.exp(beta * (propW.logw - oldW.logw));
+    const uAcc = rng(), accepted = uAcc < ratio;
+    const Hh = this.hist[this.hist.length - 1]; if (Hh) Hh.push((kind === 'regen' ? 'R' : 'E') + (accepted ? '+' : '-'));
+    this.tries++;
+    if (accepted) { this.acc++; this.G = propG; this.Wt = propW; }
+    else undo();
+    return { type: 'move', kind, accepted, ratio: Math.min(1, ratio), beta, oldG, propG, propW, info, oldLw: oldW.logw, newLw: propW.logw, uAcc, round: this.k, moveIdx: Hh ? Hh.length : 0 };
+  }
+}
+
+/* ================================================================ app state */
+const S = { L: 5, mode: 'global', speed: 'slow', playing: true, K: 20, T: null, gen: null, nextAt: 0, stepOnce: false };
+let LANG = 'en';
+try { const v = localStorage.getItem('tfs-lang'); if (v === 'zh' || v === 'en') LANG = v; } catch (e) {}
+const T = (en, zh) => (LANG === 'zh' ? zh : en);
+const msg = m => (Array.isArray(m) ? T(m[0], m[1]) : m);
+let REG, DOTS, ACC, CELLS, SHAPE;
+const AIS = { run: null, trail: [], marker: null, bulk: null, lastView: 0, lastTrail: 0, cur: null };
+let NEEDLE = null, PULSE = null, FOCUS = null, CURNODE = null, SHOWN = null;   /* SHOWN: the bulk-mode draw currently on display */
+const BULK_SHOW_MS = 1600, BULK_SHOW_AIS_MS = 1100;
+const HOVER = { cell: -1, sel: -1 };
+const MAXC = 24;
+
+function newAcc() { return { n: 0, sw: 0, sw2: 0, maxw: 0, maxlw: -Infinity, slw: 0, slw2: 0, lws: [] }; }
+function accAdd(A, lw) {
+  const w = Math.exp(lw);
+  A.n++; A.sw += w; A.sw2 += w * w; A.maxw = Math.max(A.maxw, w); A.maxlw = Math.max(A.maxlw, lw);
+  A.slw += lw; A.slw2 += lw * lw; if (A.lws.length < 300000) A.lws.push(lw);
+}
+function est(A) {
+  if (A.n < 2) return null;
+  const m = A.sw / A.n, v = Math.max(0, A.sw2 / A.n - m * m), se = Math.sqrt(v / A.n);
+  const mlw = A.slw / A.n;
+  return { s: Math.exp(S.T.logP2) * m, rel: se / m, vlog: A.slw2 / A.n - mlw * mlw, n: A.n, share: A.maxw / A.sw };
+}
+function resetData() {
+  REG = { map: new Map(), list: [] }; DOTS = []; ACC = { g: newAcc(), a: newAcc() }; SHAPE = { n: 0, m: 0, m2: 0 };
+  CELLS = { cur: [0, 1], tgt: [0, 1], binned: false, dirty: true };
+  AIS.trail = []; AIS.run = null; AIS.bulk = null; AIS.cur = null; AIS.marker = null;
+  NEEDLE = null; PULSE = null; FOCUS = null; CURNODE = null; SHOWN = null; HOVER.sel = -1; S.gen = null;
+  DG.dirty = true;
+}
+function classOf(key) {
+  let c = REG.map.get(key);
+  if (!c) { c = { id: REG.list.length, key, bin: hashStr(key) % MAXC, count: 0, gn: 0, ws: 0, ws2: 0, a0n: 0, aKn: 0, aW: 0, aW2: 0, rep: null }; REG.map.set(key, c); REG.list.push(c); CELLS.dirty = true; }
+  return c;
+}
+function cellOf(cls) { return CELLS.binned ? cls.bin : cls.id; }
+function recomputeCells() {
+  const binned = REG.list.length > MAXC, nc = binned ? MAXC : Math.max(1, REG.list.length);
+  const wts = new Array(nc).fill(0);
+  for (const c of REG.list) wts[binned ? c.bin : c.id] += c.count;
+  let tot = 0; for (let i = 0; i < nc; i++) { wts[i] += 0.6; tot += wts[i]; }
+  const tgt = [0]; let acc = 0;
+  for (let i = 0; i < nc; i++) { acc += wts[i] / tot; tgt.push(acc); }
+  tgt[nc] = 1;
+  if (binned !== CELLS.binned) CELLS.cur = tgt.slice();
+  else while (CELLS.cur.length < tgt.length) CELLS.cur.push(1);
+  if (CELLS.cur.length > tgt.length) CELLS.cur = tgt.slice();
+  CELLS.binned = binned; CELLS.tgt = tgt; CELLS.dirty = false;
+}
+function sampleInfo(root, G, Wt) {
+  const key = topoKey(G), cls = classOf(key), t = Math.exp(root.lt);
+  let hs = 0; for (const E of G.edges) hs += Math.exp(E.lu - root.lt);
+  const raw = hs / G.edges.length;
+  SHAPE.n++; const dm = raw - SHAPE.m; SHAPE.m += dm / SHAPE.n; SHAPE.m2 += dm * (raw - SHAPE.m);
+  const sd = SHAPE.n > 5 ? Math.sqrt(SHAPE.m2 / (SHAPE.n - 1)) : 0.15, z = (raw - SHAPE.m) / (sd || 0.15);
+  return { cls, t, h: 0.08 + 0.84 / (1 + Math.exp(-1.7 * z)), lw: Wt.logw, G };
+}
+let QUIET = false;   /* warm-up draws at page load feed the numbers and wedge sizes, but are not drawn on the fan */
+function pushDot(info, mode, lw) {
+  if (QUIET) return;
+  DOTS.push({ cls: info.cls, t: info.t, h: info.h, lw, mode, born: performance.now() });
+  if (DOTS.length > 3600) DOTS.splice(0, 300);
+}
+function globalDraw() { const root = gen1PI(S.T, 2, S.L, 0, 0, null), G = flatten(root), Wt = weigh(G); return { root, G, Wt }; }
+function addGlobal(d, info) {
+  info = info || sampleInfo(d.root, d.G, d.Wt);
+  const w = Math.exp(d.Wt.logw), c = info.cls;
+  c.count++; c.gn++; c.ws += w; c.ws2 += w * w; if (!c.rep) c.rep = d.G;
+  accAdd(ACC.g, d.Wt.logw); pushDot(info, 'g', d.Wt.logw); CELLS.dirty = true; DG.dirty = true;
+  return info;
+}
+function startAis() {
+  const run = new AisRun(S.T, S.L, S.K);
+  const i0 = sampleInfo(run.root, run.G, run.Wt);
+  i0.cls.count++; i0.cls.a0n++; if (!i0.cls.rep) i0.cls.rep = run.G; CELLS.dirty = true; DG.dirty = true;
+  return { run, i0 };
+}
+function finishAis(run) {
+  const info = sampleInfo(run.root, run.G, run.Wt);
+  accAdd(ACC.a, run.logW); { const Wr = Math.exp(run.logW); info.cls.aKn++; info.cls.aW += Wr; info.cls.aW2 += Wr * Wr; if (!info.cls.rep) info.cls.rep = run.G; DG.dirty = true; } pushDot(info, 'a', run.logW);
+  return info;
+}
+function prefill(ms) {
+  QUIET = true;
+  try { prefillRun(ms); } finally { QUIET = false; }
+}
+function prefillRun(ms) {
+  const t0 = performance.now();
+  while (performance.now() - t0 < ms * 0.5) addGlobal(globalDraw());
+  const t1 = performance.now();
+  while (performance.now() - t1 < ms * 0.5) {
+    const { run } = startAis(); let ev;
+    do { ev = run.advance(); } while (ev.type !== 'done');
+    finishAis(run);
+  }
+  recomputeCells(); CELLS.cur = CELLS.tgt.slice();
+}
+
+/* ================================================================ theme + canvas plumbing */
+let TH = {};
+function hex2rgb(h) { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function mix(a, b, t) { return a.map((x, i) => Math.round(x + (b[i] - x) * t)); }
+let SPRITES = [];
+const HIST = { dirty: true, last: 0 };
+const DG = { dirty: true, last: 0 };
+function readTheme() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim();
+  TH = { fg: g('--fg'), muted: g('--muted'), faint: g('--faint'), line: g('--line'), line2: g('--line-2'), panel: g('--panel'), panel2: g('--panel-2'), bg: g('--bg'),
+    violet: g('--violet'), amber: g('--amber'), teal: g('--teal'), coral: g('--coral'), newc: g('--new'), nrgb: g('--new-rgb'), vrgb: g('--violet-rgb'), trgb: g('--teal-rgb'), argb: g('--amber-rgb'),
+    dark: g('--is-dark') === '1', ramp: [g('--dot0'), g('--dot1'), g('--dot2'), g('--dot3')].map(hex2rgb) };
+  SPRITES = [];
+  for (let i = 0; i < 24; i++) {
+    const v = i / 23, seg = Math.min(2, Math.floor(v * 3)), c = mix(TH.ramp[seg], TH.ramp[seg + 1], v * 3 - seg);
+    const cv = document.createElement('canvas'); cv.width = cv.height = 48;
+    const x = cv.getContext('2d'), gr = x.createRadialGradient(24, 24, 0, 24, 24, 24);
+    const rgb = c.join(',');
+    gr.addColorStop(0, `rgba(${rgb},1)`); gr.addColorStop(TH.dark ? 0.22 : 0.4, `rgba(${rgb},${TH.dark ? 0.85 : 0.8})`); gr.addColorStop(1, `rgba(${rgb},0)`);
+    x.fillStyle = gr; x.fillRect(0, 0, 48, 48);
+    SPRITES.push(cv);
+  }
+  { const cv = document.createElement('canvas'); cv.width = cv.height = 48; const x = cv.getContext('2d'), rgb = TH.trgb;
+    const gr = x.createRadialGradient(24, 24, 0, 24, 24, 24); gr.addColorStop(0, `rgba(${rgb},1)`); gr.addColorStop(0.3, `rgba(${rgb},.8)`); gr.addColorStop(1, `rgba(${rgb},0)`);
+    x.fillStyle = gr; x.fillRect(0, 0, 48, 48); SPRITES.teal = cv; }
+  HIST.dirty = true; DG.dirty = true; if (window.__insRedraw) window.__insRedraw();
+}
+function setupCanvas(cv, aspect, minH, maxH, vh) {
+  const o = { cv, ctx: cv.getContext('2d'), w: 0, h: 0 };
+  const fit = () => {
+    const w = cv.parentElement.clientWidth - (cv.dataset.inset ? +cv.dataset.inset : 32);
+    const want = vh && window.innerWidth > 700 ? vh * window.innerHeight : w * aspect;
+    const h = Math.max(minH, Math.min(maxH || 1e9, Math.round(want))), dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (w <= 0) return;
+    o.w = w; o.h = h; cv.style.height = h + 'px'; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    o.ctx.setTransform(dpr, 0, 0, dpr, 0, 0); HIST.dirty = true;
+  };
+  new ResizeObserver(fit).observe(cv.parentElement); window.addEventListener('resize', fit); fit();
+  return o;
+}
+const FAN = setupCanvas(document.getElementById('cvFan'), 0.62, 240, 640, 0.5);
+const GR = setupCanvas(document.getElementById('cvGraph'), 0.8, 240, 640, 0.5);
+const GR2 = setupCanvas(document.getElementById('cvGraph2'), 0.8, 240, 640, 0.5);
+const TR = setupCanvas(document.getElementById('cvTree'), 0.8, 240, 640, 0.5);
+const TR2 = setupCanvas(document.getElementById('cvTree2'), 0.8, 240, 640, 0.5);
+const PR = setupCanvas(document.getElementById('cvParams'), 0.62, 240, 640, 0.5);
+const SC = setupCanvas(document.getElementById('cvSched'), 0.1, 40, 40);
+const HC = setupCanvas(document.getElementById('cvHist'), 0.5, 180, 300);
+function revealP(key, now) { const rv = VIEW.reveal.get(key); return rv === undefined ? 1 : rv === Infinity ? 0 : Math.max(0, Math.min(1, (now - rv) / 380)); }
+
+/* ================================================================ the fan */
+function fanGeom() { const w = FAN.w, h = FAN.h, cy = h - 30, R = Math.max(40, Math.min(w / 2 - 18, cy - 12)); return { cx: w / 2, cy, R, r0: R * 0.045 }; }
+function fanXY(g, F, t) { const th = Math.PI * (1 - F), r = g.r0 + (g.R - g.r0) * t; return [g.cx + r * Math.cos(th), g.cy - r * Math.sin(th)]; }
+function infoXY(g, info) {
+  const ci = cellOf(info.cls), F0 = CELLS.cur[ci] ?? 1, F1 = CELLS.cur[ci + 1] ?? 1;
+  return fanXY(g, F0 + (F1 - F0) * info.h, info.t);
+}
+function drawSprite(c, spr, x, y, s) { c.drawImage(spr, x - s, y - s, 2 * s, 2 * s); }
+/* The fan panel is the schematic from the first drawing: five labelled cones G1..G5, Hepp rays, the level arc of
+   this draw's top edge t, the rim band and the UV apex, with callouts. Sampled points and the needle sit on top;
+   each draw is placed in one of the five cones (by its diagram number) for illustration only. */
+const FAN_CALLS = [
+  { en: ['One cell per cubic graph G:', '(0,1)ᴱ / Aut G,  u = 1 − e⁻ᵅ'], zh: ['每张三价图 G 一个锥：', '(0,1)ᴱ / Aut G，u = 1 − e⁻ᵅ'] },
+  { en: ['Shared face: one αₑ → 0', '(4-valent vertex; cells glued)'], zh: ['公共面：某个 αₑ → 0', '（四价顶点；锥在此粘合）'] },
+  { en: ['Level set: top-edge u = t', 'radial density ω t^(ω−1)'], zh: ['等值面：顶边 u = t', '径向密度 ω t^(ω−1)'] },
+  { en: ['Rim t → 1 (top α → ∞)', 'large L: tropical mass sits here'], zh: ['边缘 t → 1（顶边 α → ∞）', '大 L 时热带质量集中在这里'] }];
+const FAN_FONT = '12px "IBM Plex Sans", "PingFang SC", "Hiragino Sans GB", sans-serif';
+function fanG() {
+  const W = FAN.w, H = FAN.h, c = FAN.ctx;
+  c.font = FAN_FONT;
+  const labW = Math.max(...FAN_CALLS.flatMap(cl => LANG === 'zh' ? cl.zh : cl.en).map(t => c.measureText(t).width)) + 4;
+  let lx = W - labW - 8, R = Math.min(H - 84, (lx - 76) / 1.95);
+  const wide = R >= 95;
+  if (!wide) { R = Math.max(50, Math.min(H - 84, (W - 70) / 2.1)); lx = W; }
+  const cx = wide ? 0.95 * R + 30 : W / 2;
+  return { W, H, wide, R, cx, cy: H - 46, r0: R * 0.04, lx };
+}
+function fanP(g, r, deg) { return [g.cx + r * Math.cos(deg * DEG), g.cy - r * Math.sin(deg * DEG)]; }
+function schemXY(g, info) {
+  const k = info.cls ? info.cls.id % 5 : 0, a0 = 180 - 36 * k, a1 = a0 - 36;
+  return fanP(g, g.r0 + (g.R - g.r0) * info.t, a1 + 3 + (a0 - a1 - 6) * info.h);
+}
+const fanNotes = document.getElementById('fanNotes');
+function drawFan(now) {
+  const c = FAN.ctx, g = fanG(), { W, H, R, cx, cy, r0 } = g;
+  if (fanNotes.hidden !== g.wide) fanNotes.hidden = g.wide;
+  c.clearRect(0, 0, W, H);
+  for (let i = 0; i < 5; i++) {
+    const a0 = 180 - 36 * i, a1 = a0 - 36;
+    c.beginPath(); c.moveTo(cx, cy); c.arc(cx, cy, R, -a0 * DEG, -a1 * DEG, false); c.closePath();
+    c.fillStyle = `rgba(${TH.vrgb},${i % 2 ? 0.15 : 0.07})`; c.fill();
+    c.strokeStyle = `rgba(${TH.vrgb},0.8)`; c.lineWidth = 0.8; c.stroke();
+  }
+  c.beginPath(); c.arc(cx, cy, R, -Math.PI, 0); c.arc(cx, cy, R * 0.87, 0, -Math.PI, true); c.closePath();
+  c.fillStyle = `rgba(${TH.vrgb},0.22)`; c.fill();
+  let last = null;
+  for (let k = DOTS.length - 1; k >= 0; k--) if ((S.mode === 'global') === (DOTS[k].mode === 'g')) { last = DOTS[k]; break; }
+  if (S.speed === 'bulk' && S.mode === 'global' && SHOWN) last = SHOWN;
+  const tLev = NEEDLE ? NEEDLE.info.t : last ? last.t : 0.63, rl = r0 + (R - r0) * tLev;
+  c.setLineDash([5, 4]); c.strokeStyle = TH.muted; c.lineWidth = 1;
+  c.beginPath(); c.arc(cx, cy, rl, -Math.PI, 0); c.stroke(); c.setLineDash([]);
+  c.fillStyle = TH.fg; c.beginPath(); c.arc(cx, cy, 3.5, 0, Math.PI * 2); c.fill();
+  c.font = FAN_FONT; c.fillStyle = TH.muted; c.textAlign = 'center'; c.textBaseline = 'top';
+  { let at = T('apex: all u → 0 (UV corner, integrable since ω_δ > 0)', '顶点：所有 u → 0（UV 角，因 ω_δ > 0 而可积）');
+    const room = 2 * Math.min(cx, g.lx - cx) - 8;
+    if (c.measureText(at).width > room) at = T('apex: all u → 0 (UV corner)', '顶点：所有 u → 0（UV 角）');
+    const aw = c.measureText(at).width, ax = Math.max(aw / 2 + 4, Math.min(W - aw / 2 - 4, cx));
+    c.fillText(at, ax, cy + 14); }
+  c.font = '500 14px "IBM Plex Sans", sans-serif'; c.fillStyle = TH.fg; c.textBaseline = 'middle';
+  ['G₁', 'G₂', 'G₃', 'G₄', 'G₅'].forEach((lab, i) => { const [x, y] = fanP(g, R + 17, 162 - 36 * i); c.fillText(lab, x, y); });
+  if (g.wide) {
+    const lx = g.lx, pts = [fanP(g, R * 0.62, 54), fanP(g, R * 0.55, 36), fanP(g, rl, 20), fanP(g, R * 0.95, 8)];
+    const calls = FAN_CALLS.map((cl, i) => [pts[i], cl.en, cl.zh]);
+    const y0 = 18, dyc = (cy - 20 - y0) / (calls.length - 1);
+    calls.forEach(([[px, py], en, zh], i) => {
+      const ly = y0 + i * dyc, lines = LANG === 'zh' ? zh : en;
+      c.setLineDash([3, 3]); c.strokeStyle = TH.faint; c.lineWidth = 0.7;
+      c.beginPath(); c.moveTo(px, py); c.lineTo(lx - 6, ly + 6); c.stroke(); c.setLineDash([]);
+      c.fillStyle = TH.muted; c.beginPath(); c.arc(px, py, 2.2, 0, Math.PI * 2); c.fill();
+      c.font = FAN_FONT; c.textAlign = 'left'; c.textBaseline = 'top';
+      c.fillStyle = TH.fg; c.fillText(lines[0], lx, ly); c.fillStyle = TH.muted; c.fillText(lines[1], lx, ly + 16);
+    });
+  }
+  c.globalCompositeOperation = TH.dark ? 'lighter' : 'source-over';
+  const gmax = ACC.g.maxlw, amax = ACC.a.maxlw;
+  for (const d of DOTS) {
+    if ((S.mode === 'global') !== (d.mode === 'g')) continue;
+    const top = d.mode === 'g' ? gmax : amax, v = Math.max(0, Math.min(1, 1 - (top - d.lw) / 9));
+    const [x, y] = schemXY(g, d), age = Math.min(1, (now - d.born) / 500);
+    const s = (d.mode === 'a' ? 0.75 : 1) * (1.6 + 3.4 * v * v) * (0.4 + 0.6 * age) + (1 - age) * 6;
+    if (d === last) { c.globalCompositeOperation = TH.dark ? 'lighter' : 'source-over'; c.globalAlpha = 1; drawSprite(c, d.mode === 'a' ? SPRITES.teal : SPRITES[Math.round(v * 23)], x, y, s); continue; }
+    c.globalCompositeOperation = 'source-over'; c.globalAlpha = 0.16;
+    c.fillStyle = d.mode === 'a' ? TH.teal : (v > 0.6 ? TH.amber : TH.violet);
+    c.beginPath(); c.arc(x, y, 1.2 + 1.6 * v, 0, Math.PI * 2); c.fill();
+  }
+  c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+  if (last) {
+    const [x, y] = schemXY(g, last), pr = 1 + 0.25 * Math.sin(now / 220);
+    c.strokeStyle = last.mode === 'g' ? TH.amber : TH.teal; c.lineWidth = 2;
+    c.beginPath(); c.arc(x, y, 8 * pr, 0, Math.PI * 2); c.stroke();
+    c.font = '500 11px "IBM Plex Mono", monospace'; c.fillStyle = c.strokeStyle; c.textBaseline = 'middle';
+    const lt = T('latest', '最新'), lw2 = c.measureText(lt).width;
+    if (x - 13 - lw2 > 2) { c.textAlign = 'right'; c.fillText(lt, x - 13, y); } else { c.textAlign = 'left'; c.fillText(lt, x + 13, y); }
+  }
+  if (S.mode === 'ais' && AIS.trail.length) {
+    let prev = null; c.lineCap = 'round';
+    AIS.trail.forEach(p => {
+      const xy = schemXY(g, p.info);
+      if (prev) {
+        c.strokeStyle = `rgba(${TH.trgb},${0.3 + 0.7 * p.beta})`; c.lineWidth = p.jump ? 2 : 2.6; c.setLineDash(p.jump ? [4, 4] : []);
+        c.beginPath();
+        if (p.jump) { const mx = (prev[0] + xy[0]) / 2, my = Math.min(prev[1], xy[1]) - 26; c.moveTo(prev[0], prev[1]); c.quadraticCurveTo(mx, my, xy[0], xy[1]); }
+        else { c.moveTo(prev[0], prev[1]); c.lineTo(xy[0], xy[1]); }
+        c.stroke();
+      }
+      prev = xy;
+    });
+    c.setLineDash([]);
+    if (AIS.cur) {
+      const [tx, ty] = schemXY(g, AIS.cur);
+      if (!AIS.marker) AIS.marker = { x: tx, y: ty };
+      AIS.marker.x += (tx - AIS.marker.x) * 0.25; AIS.marker.y += (ty - AIS.marker.y) * 0.25;
+      c.globalCompositeOperation = TH.dark ? 'lighter' : 'source-over';
+      drawSprite(c, SPRITES.teal, AIS.marker.x, AIS.marker.y, 14 + 3 * Math.sin(now / 200));
+      c.globalCompositeOperation = 'source-over'; c.strokeStyle = TH.teal; c.lineWidth = 1.5;
+      c.beginPath(); c.arc(AIS.marker.x, AIS.marker.y, 7, 0, Math.PI * 2); c.stroke();
+    }
+  }
+  if (NEEDLE) {
+    const p = Math.min(1, (now - NEEDLE.t0) / NEEDLE.dur), e = 1 - Math.pow(1 - p, 3);
+    const [tx, ty] = schemXY(g, NEEDLE.info), x = cx + (tx - cx) * e, y = cy + (ty - cy) * e;
+    c.strokeStyle = TH.violet; c.lineWidth = 2.2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(x, y); c.stroke();
+    c.globalCompositeOperation = TH.dark ? 'lighter' : 'source-over'; drawSprite(c, SPRITES[12], x, y, 10); c.globalCompositeOperation = 'source-over';
+    if (p >= 1) { c.font = '12px "IBM Plex Mono", monospace'; c.fillStyle = TH.violet; c.textAlign = 'left'; c.textBaseline = 'bottom'; c.fillText('t = ' + NEEDLE.info.t.toFixed(3), Math.min(x + 10, W - 90), y - 8); }
+  }
+  if (!last && !NEEDLE) {
+    c.font = '12px "IBM Plex Sans", "PingFang SC", sans-serif'; c.fillStyle = TH.muted; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(T('Sampled points appear here, one per draw.', '每抽一个样本，这里就出现一个点。'), cx, cy - R * 0.45);
+  }
+}
+
+/* one-line readout under the fan: hovered wedge, else pinned wedge, else the wedge of the current draw */
+const fanInfo = document.getElementById('fanInfo'), INS = { auto: null };
+function resetIns() { INS.auto = null; fanInfo.textContent = ''; }
+window.__insRedraw = () => {};
+function inspRefresh() {
+  if (HOVER.cell >= 0) showCell(HOVER.cell, T('hovered', '悬停'));
+  else if (HOVER.sel >= 0) showCell(HOVER.sel, T('pinned (click again to follow the draw)', '已固定（再点一次恢复跟随）'));
+  else if (INS.auto) showCell(cellOf(INS.auto), T('current draw', '当前样本'), INS.auto);
+}
+function updateGmeta() {
+  const G = VIEW.G; if (!G) return;
+  const dn = INS.auto ? T('diagram #', '图 #') + (INS.auto.id + 1) + ' · ' : '';
+  const gtxt = dn + T(`L = ${S.L} · ${G.edges.length} edges · ${G.nv} vertices`, `L = ${S.L} · ${G.edges.length} 条边 · ${G.nv} 个顶点`);
+  document.querySelectorAll('.gmeta').forEach(el => { el.textContent = gtxt; });
+}
+function followClass(cls) { INS.auto = cls; inspRefresh(); updateGmeta(); }
+function cellAt(px, py) {
+  const g = fanGeom(), dx = px - g.cx, dy = g.cy - py, r = Math.hypot(dx, dy);
+  if (dy < 0 || r > g.R + 4 || r < g.r0) return -1;
+  const F = 1 - Math.atan2(dy, dx) / Math.PI;
+  for (let i = 0; i < CELLS.cur.length - 1; i++) if (F >= CELLS.cur[i] && F < CELLS.cur[i + 1]) return i;
+  return -1;
+}
+function showCell(ci, tag, cls) {
+  if (ci < 0) return;
+  const members = cls ? [cls] : REG.list.filter(c => cellOf(c) === ci);
+  if (!members.length) return;
+  const tot = REG.list.reduce((s, c) => s + c.count, 0) || 1, cnt = members.reduce((s, c) => s + c.count, 0);
+  const gn = members.reduce((s, c) => s + c.gn, 0), ws = members.reduce((s, c) => s + c.ws, 0);
+  const name = cls ? T(`Diagram #${cls.id + 1}`, `图 #${cls.id + 1}`) : CELLS.binned ? T(`Bin ${ci + 1} of ${MAXC} (${members.length} diagrams)`, `第 ${ci + 1}/${MAXC} 箱（${members.length} 张图）`) : T(`Diagram #${ci + 1}`, `图 #${ci + 1}`);
+  const share = ACC.g.sw ? ws / ACC.g.sw : 0;
+  const pk = (100 * cnt / tot).toFixed(1), sh = (100 * share).toFixed(1), mw = gn ? (ws / gn).toExponential(2) : '—';
+  fanInfo.textContent = T(`${name} · ${tag} · picked ${pk}% · true share ${sh}% · mean w ${mw}`, `${name} · ${tag} · 被抽中 ${pk}% · 真实份额 ${sh}% · 平均 w ${mw}`);
+}
+const cvFan = document.getElementById('cvFan');
+
+/* ================================================================ diagram layout + drawing */
+const POS = new Map();
+const VIEW = { G: null, Wt: null, keys: new Set(), reveal: new Map(), tint: new Map(), ghosts: [], fit: null, tree: null, showClosing: true, agree: null, mD: 1, weighT0: 0 };
+function adjOf(G) { const adj = Array.from({ length: G.nv }, () => []); for (const E of G.edges) { adj[E.a].push(E.b); adj[E.b].push(E.a); } return adj; }
+function placeNew(G, store) {
+  const adj = adjOf(G), n = G.nv;
+  let left = G.vkey.filter(k => !store.has(k)).length, guard = 0;
+  while (left > 0 && guard++ < n + 3) {
+    let progress = false;
+    for (let v = 0; v < n; v++) {
+      if (store.has(G.vkey[v])) continue;
+      const known = adj[v].map(u => store.get(G.vkey[u])).filter(Boolean);
+      if (known.length) {
+        const x = known.reduce((s, p) => s + p.x, 0) / known.length, y = known.reduce((s, p) => s + p.y, 0) / known.length;
+        store.set(G.vkey[v], { x: x + (Math.random() - 0.5) * 0.6, y: y + (Math.random() - 0.5) * 0.6, vx: 0, vy: 0 }); left--; progress = true;
+      }
+    }
+    if (!progress) for (let v = 0; v < n; v++) if (!store.has(G.vkey[v])) { store.set(G.vkey[v], { x: (Math.random() - 0.5) * 3, y: (Math.random() - 0.5) * 3, vx: 0, vy: 0 }); left--; break; }
+  }
+}
+function relax(G, store, iters, movable) {
+  const n = G.nv, P = G.vkey.map(k => store.get(k)), mv = movable ? G.vkey.map(k => movable.has(k)) : null;
+  for (let it = 0; it < iters; it++) {
+    for (const p of P) { p.fx = 0; p.fy = 0; }
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      let dx = P[i].x - P[j].x, dy = P[i].y - P[j].y, d2 = dx * dx + dy * dy;
+      if (d2 < 1e-4) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = 0.01; }
+      const f = 0.32 / d2; P[i].fx += f * dx; P[i].fy += f * dy; P[j].fx -= f * dx; P[j].fy -= f * dy;
+    }
+    for (const E of G.edges) {
+      const A = P[E.a], B = P[E.b]; if (A === B) continue;
+      const dx = B.x - A.x, dy = B.y - A.y, d = Math.sqrt(dx * dx + dy * dy) + 1e-6, f = 0.22 * (d - 1) / d;
+      A.fx += f * dx; A.fy += f * dy; B.fx -= f * dx; B.fy -= f * dy;
+    }
+    for (let i = 0; i < n; i++) {
+      const p = P[i];
+      if (mv && !mv[i]) { p.vx = 0; p.vy = 0; continue; }
+      p.fx -= 0.015 * p.x; p.fy -= 0.015 * p.y;
+      p.vx = (p.vx + 0.25 * p.fx) * 0.62; p.vy = (p.vy + 0.25 * p.fy) * 0.62;
+      const sp = Math.hypot(p.vx, p.vy); if (sp > 0.3) { p.vx *= 0.3 / sp; p.vy *= 0.3 / sp; }
+      p.x += p.vx; p.y += p.vy;
+    }
+  }
+}
+function setView(G, opt) {
+  opt = opt || {};
+  const now = performance.now();
+  if (opt.fresh) { POS.clear(); VIEW.ghosts = []; VIEW.tint.clear(); VIEW.fitGen = (VIEW.fitGen || 0) + 1; FOCUS = null; CURNODE = null; VIEW.lastKey = null; }
+  const newKeys = new Set(G.edges.map(e => e.key)), oldKeys = VIEW.keys;
+  if (VIEW.G && opt.ghost) for (const E of VIEW.G.edges) if (!newKeys.has(E.key)) {
+    const pa = POS.get(VIEW.G.vkey[E.a]), pb = POS.get(VIEW.G.vkey[E.b]);
+    if (pa && pb) VIEW.ghosts.push({ x1: pa.x, y1: pa.y, x2: pb.x, y2: pb.y, t0: now, color: opt.ghost });
+  }
+  const newVerts = G.vkey.filter(k => !POS.has(k));
+  placeNew(G, POS);
+  VIEW.G = G; VIEW.keys = newVerts.length && opt.fresh ? newKeys : newKeys; VIEW.reveal.clear();
+  if (opt.Wt) VIEW.Wt = opt.Wt;
+  if (opt.tree) { VIEW.tree = opt.tree; VIEW.letters = letterMap(opt.tree.root, opt.tree.swap); }
+  if (opt.showClosing !== undefined) VIEW.showClosing = opt.showClosing;
+  if (opt.Wt || opt.showClosing !== undefined) {
+    if (VIEW.showClosing && VIEW.Wt) { VIEW.agree = edgeAgreement(G, VIEW.Wt); VIEW.mD = diagOpacity(VIEW.Wt.logw); VIEW.weighT0 = 0; }
+    else VIEW.agree = null;
+  }
+  if (opt.hidden) for (const E of G.edges) VIEW.reveal.set(E.key, Infinity);
+  else if (opt.growNew) for (const E of G.edges) if (!oldKeys.has(E.key)) VIEW.reveal.set(E.key, now);
+  if (opt.tintNew) for (const E of G.edges) if (!oldKeys.has(E.key)) VIEW.tint.set(E.key, { color: opt.tintNew, until: now + (opt.tintDur || 1200) });
+  if (opt.settle) relax(G, POS, opt.settle);
+  else if (newVerts.length) relax(G, POS, 160, new Set(newVerts));   /* only the new vertices move; everything else stays put */
+  if (opt.fresh) VIEW.relaxUntil = now + 1800;
+  if (POS.size > 6 * G.nv + 200) { const live = new Set(G.vkey); for (const k of [...POS.keys()]) if (!live.has(k)) POS.delete(k); }
+  if (FOCUS && FOCUS.keys && ![...FOCUS.keys].some(k => newKeys.has(k))) FOCUS = null;
+  updateGmeta();
+}
+/* transparency after weighing: whole diagram by w (relative to typical draws at this L), each edge by its agreement */
+function diagOpacity(lw) {
+  const A = ACC.g; if (A.n < 30) return 1;
+  const m = A.slw / A.n, sd = Math.sqrt(Math.max(1e-6, A.slw2 / A.n - m * m));
+  return Math.max(0.15, Math.min(1, 0.6 + 0.3 * (lw - m) / sd));
+}
+function weighMix() { return VIEW.agree ? 1 : 0; }
+/* steep map: agreement 0.4 or less is nearly invisible, 1 is solid */
+function agreeLevel(a) { const s = Math.max(0, Math.min(1, ((a ?? 1) - 0.4) / 0.6)); return s * s; }
+function agreeOpacity(a) { return 0.05 + 0.95 * agreeLevel(a); }
+function edgeAlpha() { return 1; }
+function edgeWidth() { return 1; }
+
+function edgeGeom(G, toS, store) {
+  const groups = new Map();
+  G.edges.forEach((E, i) => { const k = Math.min(E.a, E.b) + '_' + Math.max(E.a, E.b); if (!groups.has(k)) groups.set(k, []); groups.get(k).push(i); });
+  const geo = new Array(G.edges.length);
+  for (const list of groups.values()) list.forEach((ei, idx) => {
+    const E = G.edges[ei], A = toS(store.get(G.vkey[E.a])), B = toS(store.get(G.vkey[E.b]));
+    const mx = (A[0] + B[0]) / 2, my = (A[1] + B[1]) / 2, dx = B[0] - A[0], dy = B[1] - A[1], len = Math.hypot(dx, dy) || 1;
+    const off = (idx - (list.length - 1) / 2) * 0.55 * len * (E.a < E.b ? 1 : -1);
+    geo[ei] = { A, B, Q: [mx - dy / len * off, my + dx / len * off] };
+  });
+  return geo;
+}
+function quadPt(g, t) { const u = 1 - t; return [u * u * g.A[0] + 2 * u * t * g.Q[0] + t * t * g.B[0], u * u * g.A[1] + 2 * u * t * g.Q[1] + t * t * g.B[1]]; }
+const HI = () => (S.mode === 'ais' ? TH.teal : TH.newc), HIRGB = () => (S.mode === 'ais' ? TH.trgb : TH.nrgb);
+function edgeStyle(E, now) {
+  let col = E.kind === 'top' ? TH.violet : TH.muted, lw = E.kind === 'top' ? Math.max(1.6, 3.6 - 0.45 * E.node.depth) : 1.6;
+  const tint = VIEW.tint.get(E.key);
+  if (tint && tint.until > now) { col = tint.color; lw += 0.8; } else if (tint) VIEW.tint.delete(E.key);
+  if (VIEW.lastKey === E.key) { col = HI(); lw += 1.4; }
+  if (FOCUS && FOCUS.edge && FOCUS.edge.key === E.key) { col = TH.amber; lw += 1; }
+  return { col, lw };
+}
+function drawGraph(now, O) {
+  const c = O.ctx, W = O.w, H = O.h;
+  c.clearRect(0, 0, W, H);
+  c.fillStyle = `rgba(${TH.vrgb},0.10)`;
+  for (let x = 12; x < W; x += 22) for (let y = 12; y < H; y += 22) c.fillRect(x, y, 1, 1);
+  const G = VIEW.G; if (!G) return;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const k of G.vkey) { const p = POS.get(k); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+  const pad = 36, sc = Math.min(90, (W - 2 * pad) / Math.max(0.5, x1 - x0), (H - 2 * pad) / Math.max(0.5, y1 - y0));
+  const tgt = { s: sc, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2 };
+  if (O.fitGen !== VIEW.fitGen) { O.fit = null; O.fitGen = VIEW.fitGen; }
+  if (!O.fit) O.fit = { ...tgt };
+  for (const k of ['s', 'cx', 'cy']) O.fit[k] += (tgt[k] - O.fit[k]) * 0.12;
+  const F = O.fit, toS = p => [W / 2 + (p.x - F.cx) * F.s, H / 2 + (p.y - F.cy) * F.s];
+
+  VIEW.ghosts = VIEW.ghosts.filter(gh => now - gh.t0 < 700);
+  for (const gh of VIEW.ghosts) {
+    const a = 1 - (now - gh.t0) / 700, A = toS({ x: gh.x1, y: gh.y1 }), B = toS({ x: gh.x2, y: gh.y2 });
+    c.globalAlpha = a; c.strokeStyle = gh.color; c.lineWidth = 2; c.setLineDash([4, 4]);
+    c.beginPath(); c.moveTo(A[0], A[1]); c.lineTo(B[0], B[1]); c.stroke(); c.setLineDash([]);
+  }
+  c.globalAlpha = 1;
+  const geo = edgeGeom(G, toS, POS), vis = new Float32Array(G.nv);
+  const mix = weighMix(now), dm = 1;
+  c.lineCap = 'round';
+  const tLabels = [];
+  O.hit = { geo, G };
+  G.edges.forEach((E, i) => {
+    const p = revealP(E.key, now);
+    if (p <= 0) return;
+    vis[E.a] = 1; if (p >= 0.98) vis[E.b] = 1;
+    const { col, lw } = edgeStyle(E, now);
+    const dim = FOCUS && FOCUS.keys && !FOCUS.keys.has(E.key);
+    c.globalAlpha = (dim ? 0.3 : 1) * edgeAlpha(E.key, mix) * dm;
+    c.strokeStyle = col; c.lineWidth = (lw + (FOCUS && !dim ? 1 : 0)) * edgeWidth(E.key, mix);
+    if (TH.dark && E.kind === 'top' && !dim) { c.shadowColor = col; c.shadowBlur = 8; }
+    c.beginPath(); c.moveTo(geo[i].A[0], geo[i].A[1]);
+    const steps = 18, last = Math.max(1, Math.round(steps * p));
+    for (let s = 1; s <= last; s++) { const q = quadPt(geo[i], (s / steps) * (p / (last / steps))); c.lineTo(q[0], q[1]); }
+    c.stroke(); c.shadowBlur = 0;
+    if (E.kind === 'top' && p >= 1) tLabels.push(i);
+  });
+  c.globalAlpha = dm;
+  let mx = 0, my = 0; for (const k of G.vkey) { const s = toS(POS.get(k)); mx += s[0]; my += s[1]; } mx /= G.nv; my /= G.nv;
+  if (VIEW.letters && tLabels.length <= 16) {
+    c.font = 'italic 19px "Instrument Serif", serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    for (const i of tLabels) {
+      const E = G.edges[i], g = geo[i], q = quadPt(g, 0.5), L = VIEW.letters.get(E.node); if (!L) continue;
+      let nx = -(g.B[1] - g.A[1]), ny = g.B[0] - g.A[0]; const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+      if ((q[0] - mx) * nx + (q[1] - my) * ny < 0) { nx = -nx; ny = -ny; }
+      c.fillStyle = E.key === VIEW.lastKey ? HI() : (FOCUS && FOCUS.ring === E.node ? TH.amber : TH.violet);
+      c.fillText(L, q[0] + nx * 15, q[1] + ny * 15);
+    }
+  }
+  G.ext.forEach((v, i) => {
+    if (!vis[v]) return;
+    const s = toS(POS.get(G.vkey[v])); let dx = s[0] - mx, dy = s[1] - my; const d = Math.hypot(dx, dy) || 1; dx /= d; dy /= d;
+    c.strokeStyle = TH.amber; c.lineWidth = 2.2; c.beginPath(); c.moveTo(s[0], s[1]); c.lineTo(s[0] + dx * 22, s[1] + dy * 22); c.stroke();
+    c.fillStyle = TH.amber; c.font = '11px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(i === 0 ? 'p' : '−p', s[0] + dx * 32, s[1] + dy * 32);
+  });
+  c.fillStyle = TH.fg;
+  G.vkey.forEach((k, v) => { if (!vis[v]) return; const s = toS(POS.get(k)); c.beginPath(); c.arc(s[0], s[1], 3, 0, Math.PI * 2); c.fill(); });
+  c.globalAlpha = 1;
+  if (mix > 0.5 && VIEW.agree && G.edges.length <= 14) {
+    c.font = '500 11px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    G.edges.forEach((E, i) => {
+      if (revealP(E.key, now) < 1 || (FOCUS && FOCUS.keys && !FOCUS.keys.has(E.key))) return;
+      const a = VIEW.agree.get(E.key); if (a === undefined) return;
+      const q = quadPt(geo[i], 0.5), txt = Math.round(100 * a) + '%', tw = c.measureText(txt).width + 8;
+      c.globalAlpha = Math.min(1, 2 * mix - 1);
+      c.fillStyle = TH.panel2; c.strokeStyle = TH.line2; c.lineWidth = 1;
+      c.beginPath(); c.roundRect ? c.roundRect(q[0] - tw / 2, q[1] - 8, tw, 16, 8) : c.rect(q[0] - tw / 2, q[1] - 8, tw, 16); c.fill(); c.stroke();
+      c.fillStyle = agreeLevel(a) > 0.5 ? TH.fg : TH.coral; c.fillText(txt, q[0], q[1] + 0.5);
+    });
+    c.globalAlpha = 1;
+  }
+}
+function drawThumb(cv, G) {
+  if (!G._thumb) { const st = new Map(); placeNew(G, st); relax(G, st, 260); G._thumb = st; }
+  const st = G._thumb, c = cv.getContext('2d'), W = cv.width, H = cv.height, k = W / 352;
+  c.clearRect(0, 0, W, H);
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const key of G.vkey) { const p = st.get(key); x0 = Math.min(x0, p.x); x1 = Math.max(x1, p.x); y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); }
+  const pad = 26 * k, sc = Math.min(110 * k, (W - 2 * pad) / Math.max(0.5, x1 - x0), (H - 2 * pad) / Math.max(0.5, y1 - y0));
+  const toS = p => [W / 2 + (p.x - (x0 + x1) / 2) * sc, H / 2 + (p.y - (y0 + y1) / 2) * sc];
+  const geo = edgeGeom(G, toS, st);
+  c.lineCap = 'round';
+  G.edges.forEach((E, i) => {
+    c.strokeStyle = E.kind === 'top' ? TH.violet : TH.muted; c.lineWidth = Math.max(1.2, (E.kind === 'top' ? 4 : 2.6) * k);
+    c.beginPath(); c.moveTo(geo[i].A[0], geo[i].A[1]); c.quadraticCurveTo(geo[i].Q[0], geo[i].Q[1], geo[i].B[0], geo[i].B[1]); c.stroke();
+  });
+  c.fillStyle = TH.amber;
+  for (const v of G.ext) { const s = toS(st.get(G.vkey[v])); c.beginPath(); c.arc(s[0], s[1], Math.max(2.5, 6 * k), 0, Math.PI * 2); c.fill(); }
+}
+
+/* ================================================================ recursion tree
+   Each ring is drawn as the loop it really is: the thick top edge over the top, then (clockwise from its right
+   end) bead, bridge, bead, ..., bead back to its left end. A vertex bead is a dot on the ring; a bead that is a
+   smaller piece with loops occupies a light segment of the ring and gets its own ring, one column to the right. */
+let TREEHIT = [];
+const DEG = Math.PI / 180;
+function ringLetter(i) { return i < 26 ? String.fromCharCode(65 + i) : 'R' + (i + 1); }
+function letterMap(root, swap) {
+  const sub = n => (swap && n === swap.from) ? swap.to : n, m = new Map(); let i = 0;
+  (function v(n) { m.set(n, ringLetter(i++)); for (const b of n.beads) if (b.kind === 'n') v(sub(b.node)); })(sub(root));
+  return m;
+}
+function ringUnits(n) {
+  const k = n.beads.length, units = [];
+  for (let i = 0; i < k; i++) { units.push({ type: 'bead', i, w: n.beads[i].kind === 'n' ? 1.25 : 0 }); if (i < k - 1) units.push({ type: 'bridge', i, w: 1 }); }
+  const tot = units.reduce((s, u) => s + u.w, 0) || 1;
+  let a = 35;
+  for (const u of units) { u.a0 = a; a -= 250 * u.w / tot; u.a1 = a; }
+  return units;
+}
+function chainPlan(n, LET, extK, sub) {
+  sub = sub || (x => x);
+  const en = [], zh = [];
+  n.beads.forEach(b => {
+    if (b.kind === 'v') { const ext = extK.has('v' + b.uid); en.push(ext ? 'vertex with external leg' : 'vertex'); zh.push(ext ? '带外腿的顶点' : '顶点'); }
+    else { const ch = sub(b.node), L = LET.get(ch); en.push(`piece with ${ch.L} loop${ch.L > 1 ? 's' : ''} (ring ${L})`); zh.push(`含 ${ch.L} 圈的子图（环 ${L}）`); }
+  });
+  return { en: en.join(' — bridge — '), zh: zh.join(' — 桥 — ') };
+}
+function drawTree(now, O) {
+  const c = O.ctx, W = O.w, H = O.h;
+  c.clearRect(0, 0, W, H); O.hit = [];
+  const vt = VIEW.tree; if (!vt || !vt.root || !VIEW.G) return;
+  const sub = n => (vt.swap && n === vt.swap.from) ? vt.swap.to : n;
+  const extKeys = new Set(VIEW.G.ext.map(v => VIEW.G.vkey[v]));
+  const items = []; let leaf = 0, maxD = 0;
+  (function visit(n, d, parent, bi) {
+    const it = { n, d, parent, bi, kids: [] }; items.push(it); maxD = Math.max(maxD, d);
+    n.beads.forEach((b, i) => { if (b.kind === 'n') it.kids.push(visit(sub(b.node), d + 1, it, i)); });
+    if (!it.kids.length) it.y = leaf++; else it.y = (it.kids[0].y + it.kids[it.kids.length - 1].y) / 2;
+    return it;
+  })(sub(vt.root), 0, null, -1);
+  const padX = 48, padY = 40, rows = leaf;
+  const dx = maxD ? Math.min(150, (W - 2 * padX) / maxD) : 0, dy = rows > 1 ? Math.min(140, (H - 2 * padY) / (rows - 1)) : 0;
+  const r = Math.max(7, Math.min(46, dx ? dx * 0.34 : 46, dy ? dy * 0.3 : 46));
+  const x0 = maxD ? padX : W / 2, y0 = rows > 1 ? padY + Math.max(0, (H - 2 * padY - dy * (rows - 1)) / 2) : H / 2;
+  const tmix = weighMix(now), last = VIEW.lastKey, hl = FOCUS && FOCUS.edge ? FOCUS.edge.key : null;
+  items.forEach((it, i) => { it.x = x0 + it.d * dx; it.yy = y0 + it.y * dy; it.letter = ringLetter(i); it.units = ringUnits(it.n); it.p = revealP('t' + it.n.uid, now); });
+  const pt = (it, a, rr) => [it.x + (rr ?? r) * Math.cos(a * DEG), it.yy - (rr ?? r) * Math.sin(a * DEG)];
+  const arc = (it, a0, a1, rr) => { c.beginPath(); c.arc(it.x, it.yy, rr ?? r, -a0 * DEG, -a1 * DEG, false); };
+  c.lineCap = 'round';
+  for (const it of items) {
+    if (it.p <= 0 || !it.parent || it.parent.p <= 0) continue;
+    const u = it.parent.units.find(q => q.type === 'bead' && q.i === it.bi), [bx, by] = pt(it.parent, (u.a0 + u.a1) / 2, r + 4);
+    c.strokeStyle = `rgba(${TH.vrgb},0.6)`; c.lineWidth = 1.3; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(bx, by); c.bezierCurveTo(bx + dx * 0.35, by, it.x - r - dx * 0.3, it.yy, it.x - r - 4, it.yy); c.stroke(); c.setLineDash([]);
+  }
+  for (const it of items) {
+    if (it.p <= 0) continue;
+    const n = it.n, hover = FOCUS && (FOCUS.node === n || FOCUS.ring === n), cur = !FOCUS && CURNODE === n;
+    const tint = VIEW.tint.get('t' + n.uid), tcol = tint && tint.until > now ? tint.color : null;
+    let ag = 0, cnt = 0;
+    if (VIEW.agree) for (const k of ['t' + n.uid, ...n.bridges.map((_, j) => 'b' + n.uid + '_' + j)]) { const a = VIEW.agree.get(k); if (a !== undefined) { ag += a; cnt++; } }
+    c.globalAlpha = it.p;
+    if (hover || cur) { c.fillStyle = hover ? `rgba(${TH.argb},0.13)` : `rgba(${HIRGB()},0.13)`; c.beginPath(); c.arc(it.x, it.yy, r + 10, 0, Math.PI * 2); c.fill(); }
+    c.strokeStyle = TH.line2; c.lineWidth = 1.2; c.setLineDash([3, 4]); arc(it, 35, -215); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = hl === 't' + n.uid ? TH.amber : last === 't' + n.uid ? HI() : (tcol || TH.violet); c.lineWidth = Math.max(3, r * 0.2) + (hl === 't' + n.uid ? 1.5 : 0);
+    arc(it, 145, 35); c.stroke();
+    for (const u of it.units) {
+      if (u.type === 'bridge') {
+        const key = 'b' + n.uid + '_' + u.i, q = revealP(key, now); if (q <= 0) continue;
+        const bt = VIEW.tint.get(key);
+        c.strokeStyle = hl === key ? TH.amber : last === key ? HI() : (bt && bt.until > now ? bt.color : TH.muted); c.lineWidth = (hl === key || last === key) ? 3.6 : 2.2;
+        arc(it, u.a0, u.a0 + (u.a1 - u.a0) * q); c.stroke();
+      } else if (n.beads[u.i].kind === 'n') {
+        const ch = sub(n.beads[u.i].node), q = revealP('t' + ch.uid, now), isCur = CURNODE === ch;
+        if (q > 0) {
+          c.strokeStyle = isCur ? `rgba(${HIRGB()},0.45)` : `rgba(${TH.vrgb},0.32)`; c.lineWidth = Math.max(6, r * 0.38); arc(it, u.a0, u.a1); c.stroke();
+          c.strokeStyle = isCur ? HI() : TH.violet; c.lineWidth = 1.4; arc(it, u.a0, u.a1); c.stroke();
+        } else { c.strokeStyle = `rgba(${TH.vrgb},0.6)`; c.lineWidth = 1.4; c.setLineDash([2, 3]); arc(it, u.a0, u.a1, r + 3); c.stroke(); arc(it, u.a0, u.a1, r - 3); c.stroke(); c.setLineDash([]); }
+        const chIt = items.find(x => x.n === ch);
+        if (chIt && r >= 10) { const [lx, ly] = pt(it, (u.a0 + u.a1) / 2, r + 13); c.font = '500 12px "IBM Plex Mono", monospace'; c.fillStyle = isCur ? HI() : TH.violet; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(chIt.letter, lx, ly); }
+      }
+    }
+    for (const u of it.units) if (u.type === 'bead' && n.beads[u.i].kind === 'v') {
+      const b = n.beads[u.i], ext = extKeys.has('v' + b.uid), [vx, vy] = pt(it, u.a0);
+      if (ext) { const [ox, oy] = pt(it, u.a0, r + 9); c.strokeStyle = TH.amber; c.lineWidth = 2; c.beginPath(); c.moveTo(vx, vy); c.lineTo(ox, oy); c.stroke(); }
+      c.fillStyle = ext ? TH.amber : TH.fg; c.beginPath(); c.arc(vx, vy, ext ? 3.6 : 2.8, 0, Math.PI * 2); c.fill();
+    }
+    const showAg = tmix > 0.5 && cnt && r >= 16;
+    if (r >= 9) {
+      c.font = `500 ${r >= 16 ? 15 : 12}px "IBM Plex Mono", monospace`; c.fillStyle = cur ? HI() : TH.fg; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(it.letter, it.x, it.yy - (showAg ? 7 : 0));
+    }
+    if (showAg) { c.font = '500 11px "IBM Plex Mono", monospace'; c.fillStyle = agreeLevel(ag / cnt) > 0.5 ? TH.muted : TH.coral; c.fillText(Math.round(100 * ag / cnt) + '%', it.x, it.yy + 9); }
+    if (r >= 11) {
+      c.font = '11px "IBM Plex Mono", monospace'; c.fillStyle = TH.muted; c.textAlign = 'center'; c.textBaseline = 'top';
+      c.fillText(n.L + T(n.L > 1 ? ' loops' : ' loop', ' 圈'), it.x, it.yy + r + 22);
+      c.fillStyle = TH.violet; c.textBaseline = 'bottom'; c.fillText('t=' + (Math.exp(n.lt) >= 0.01 ? Math.exp(n.lt).toFixed(2) : Math.exp(n.lt).toExponential(0)), it.x, it.yy - r - 6);
+    }
+    c.globalAlpha = 1;
+    O.hit.push({ x: it.x, y: it.yy, r: r + 8, n, letter: it.letter, ag: cnt ? ag / cnt : null });
+  }
+}
+const cvTree = document.getElementById('cvTree'), treeInfo = document.getElementById('treeInfo');
+const TREE_DEFAULT = ['Hover a ring or an edge: the matching piece lights up on the other side.', '悬停在环或边上，另一边对应的部分会亮起。'];
+let TREEMSG = TREE_DEFAULT;
+function setTreeInfo(en, zh) { TREEMSG = Array.isArray(en) ? en : [en, zh || en]; if (!(FOCUS && (FOCUS.node || FOCUS.src === 'graph'))) treeInfo.textContent = msg(TREEMSG); }
+function attachTreeHover(O) {
+  const cv = O.cv;
+  cv.addEventListener('pointermove', e => {
+    const b = cv.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
+    const hit = (O.hit || []).find(h => Math.hypot(h.x - x, h.y - y) < h.r);
+    if (hit) {
+      const n = hit.n;
+      FOCUS = { node: n, keys: subtreeKeys(n) };
+      const plan = chainPlan(n, VIEW.letters || new Map(), new Set(VIEW.G.ext.map(v => VIEW.G.vkey[v])), VIEW.tree && VIEW.tree.swap ? (m => m === VIEW.tree.swap.from ? VIEW.tree.swap.to : m) : null);
+      treeInfo.textContent = T(`Ring ${hit.letter}: ${n.L} loop${n.L > 1 ? 's' : ''}, ${n.n} legs, top edge t = ${Math.exp(n.lt).toFixed(4)} · chain: ${plan.en}`, `环 ${hit.letter}：${n.L} 圈、${n.n} 条腿，顶边 t = ${Math.exp(n.lt).toFixed(4)} · 链：${plan.zh}`);
+      if (hit.ag !== null && VIEW.agree) treeInfo.textContent += T(` · agrees with U^tr ${(100 * hit.ag).toFixed(0)}%`, ` · 与 U^tr 一致 ${(100 * hit.ag).toFixed(0)}%`);
+    } else if (FOCUS && FOCUS.node) { FOCUS = null; treeInfo.textContent = msg(TREEMSG); }
+  });
+  cv.addEventListener('pointerleave', () => { if (FOCUS && FOCUS.node) FOCUS = null; treeInfo.textContent = msg(TREEMSG); });
+}
+
+/* hovering an edge of the diagram lights up its ring and its arc in the tree */
+let GRAPHHIT = null;
+const cvGraph = document.getElementById('cvGraph');
+function edgeName(E) {
+  const X = (VIEW.letters && VIEW.letters.get(E.node)) || '?';
+  const k = +E.key.split('_').pop() + 1;
+  return E.kind === 'top' ? T(`top edge of ring ${X}`, `环 ${X} 的顶边`) : T(`bridge ${k} of ring ${X}`, `环 ${X} 的第 ${k} 座桥`);
+}
+function attachGraphHover(O) {
+  const cv = O.cv;
+  cv.addEventListener('pointermove', e => {
+    if (!O.hit) return;
+    const b = cv.getBoundingClientRect(), x = e.clientX - b.left, y = e.clientY - b.top;
+    let best = null, bd = 10;
+    O.hit.G.edges.forEach((E, i) => {
+      if (revealP(E.key, performance.now()) <= 0) return;
+      for (let s = 0; s <= 12; s++) { const q = quadPt(O.hit.geo[i], s / 12), d = Math.hypot(q[0] - x, q[1] - y); if (d < bd) { bd = d; best = E; } }
+    });
+    if (best) { FOCUS = { edge: best, keys: new Set([best.key]), ring: best.node, src: 'graph' }; treeInfo.textContent = `${edgeName(best)} · u = ${Math.exp(best.lu).toFixed(4)}`; }
+    else if (FOCUS && FOCUS.src === 'graph') { FOCUS = null; treeInfo.textContent = msg(TREEMSG); }
+  });
+  cv.addEventListener('pointerleave', () => { if (FOCUS && FOCUS.src === 'graph') { FOCUS = null; treeInfo.textContent = msg(TREEMSG); } });
+}
+attachGraphHover(GR); attachGraphHover(GR2); attachTreeHover(TR); attachTreeHover(TR2);
+
+/* ================================================================ Schwinger parameters (Hepp sector) */
+let PARHIT = null;
+function drawParams(now) {
+  const c = PR.ctx, W = PR.w, H = PR.h;
+  c.clearRect(0, 0, W, H); PARHIT = null;
+  const G = VIEW.G; if (!G) return;
+  const es = G.edges.slice().sort((a, b) => b.lu - a.lu), n = es.length;
+  const padL = 40, padR = 8, padT = 40, padB = 26, pw = W - padL - padR, ph = H - padT - padB;
+  const minL10 = Math.min(...es.map(E => E.lu / Math.LN10));
+  const lo = Math.max(-8, Math.min(-1, Math.floor(minL10)));
+  const yOf = l10 => padT + ph * (1 - (Math.max(lo, l10) - lo) / (0 - lo));
+  c.font = '11px "IBM Plex Mono", monospace'; c.textAlign = 'right'; c.textBaseline = 'middle';
+  for (let k = lo; k <= 0; k++) {
+    const y = yOf(k);
+    c.strokeStyle = TH.line; c.lineWidth = 1; c.beginPath(); c.moveTo(padL, y); c.lineTo(W - padR, y); c.stroke();
+    if ((k - lo) % (lo < -5 ? 2 : 1) === 0 || k === 0) { c.fillStyle = TH.muted; c.fillText(k === 0 ? '1' : '10' + String(k).replace('-', '⁻').replace(/\d/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]), padL - 6, y); }
+  }
+  c.save(); c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = TH.muted; c.fillText(T('u_e (log scale)', 'u_e（对数坐标）'), padL, 2); c.restore();
+  const slot = pw / n, bw = Math.max(2, Math.min(28, slot * 0.72));
+  const closing = (VIEW.showClosing && VIEW.Wt) ? VIEW.Wt.closingKeys : null;
+  const pmix = weighMix(now);
+  es.forEach((E, i) => {
+    const p = revealP(E.key, now); if (p <= 0) return;
+    const x = padL + slot * (i + 0.5), yTop = yOf(E.lu / Math.LN10), yb = padT + ph;
+    const h = (yb - yTop) * p;
+    const { col } = edgeStyle(E, now);
+    const dim = FOCUS && FOCUS.keys && !FOCUS.keys.has(E.key);
+    const ea = edgeAlpha(E.key, pmix);
+    c.globalAlpha = (dim ? 0.2 : 1) * ea;
+    c.fillStyle = col; c.fillRect(x - bw / 2, yb - h, bw, h);
+    if (ea < 0.999 && h > 1) { c.globalAlpha = dim ? 0.2 : 0.75; c.strokeStyle = col; c.lineWidth = 1; c.strokeRect(x - bw / 2 + 0.5, yb - h + 0.5, Math.max(1, bw - 1), h - 1); }
+    c.globalAlpha = dim ? 0.2 : 1;
+    if (closing && closing.has(E.key) && p >= 1) { c.fillStyle = TH.amber; c.beginPath(); c.arc(x, yTop - 7, Math.max(2.5, Math.min(5, bw * 0.3)), 0, Math.PI * 2); c.fill(); }
+    if (pmix > 0.5 && VIEW.agree && n <= 14 && p >= 1 && !dim) {
+      const a = VIEW.agree.get(E.key);
+      if (a !== undefined) {
+        c.font = '500 11px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'bottom';
+        c.fillStyle = agreeLevel(a) > 0.5 ? TH.fg : TH.coral;
+        c.fillText(String(Math.round(100 * a)), x, yTop - (closing && closing.has(E.key) ? 14 : 3));
+      }
+    }
+    c.globalAlpha = 1;
+  });
+  if (n <= 24) {
+    c.fillStyle = TH.muted; c.textAlign = 'center'; c.textBaseline = 'top';
+    es.forEach((E, i) => {
+      if (revealP(E.key, now) <= 0) return;
+      const L = E.kind === 'top' && VIEW.letters ? VIEW.letters.get(E.node) : null;
+      c.fillStyle = L ? TH.violet : TH.muted; c.fillText(L || String(i + 1), padL + slot * (i + 0.5), padT + ph + 6);
+    });
+  } else { c.fillStyle = TH.muted; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText('rank 1 (t) → ' + n, padL, padT + ph + 6); }
+  PARHIT = { padL, slot, es, padT, ph };
+}
+const cvParams = document.getElementById('cvParams'), pText = document.getElementById('pText');
+const P_DEFAULT = ['Hover a bar to find its edge in the diagram.', '悬停在柱上，在图里找到那条边。'];
+cvParams.addEventListener('pointermove', e => {
+  if (!PARHIT) return;
+  const b = cvParams.getBoundingClientRect(), x = e.clientX - b.left, i = Math.floor((x - PARHIT.padL) / PARHIT.slot);
+  const E = PARHIT.es[i];
+  if (!E) { if (FOCUS && FOCUS.edge) { FOCUS = null; pText.textContent = msg(P_DEFAULT); } return; }
+  FOCUS = { edge: E, keys: new Set([E.key]), ring: E.node };
+  const cl = VIEW.Wt && VIEW.Wt.closingKeys.has(E.key);
+  const agp = VIEW.agree && VIEW.agree.has(E.key) ? (100 * VIEW.agree.get(E.key)).toFixed(0) : null, uu = Math.exp(E.lu).toPrecision(4);
+  pText.textContent = T(`rank ${i + 1} of ${PARHIT.es.length} · u = ${uu} · ${edgeName(E)} · ${cl ? 'closes a loop: factor of U^tr' : 'in the spanning tree'}${agp ? ' · agrees with U^tr ' + agp + '%' : ''}`,
+    `第 ${i + 1}/${PARHIT.es.length} 位 · u = ${uu} · ${edgeName(E)} · ${cl ? '闭合一个圈：U^tr 的因子' : '在生成树里'}${agp ? ' · 与 U^tr 一致 ' + agp + '%' : ''}`);
+});
+cvParams.addEventListener('pointerleave', () => { if (FOCUS && FOCUS.edge) FOCUS = null; pText.textContent = msg(P_DEFAULT); });
+function paramsSummary() {
+  if (!VIEW.Wt || !VIEW.showClosing) return;
+  const Wt = VIEW.Wt;
+  if (!(FOCUS && FOCUS.edge)) pText.textContent = T(`Hepp sector: the ${VIEW.G.edges.length} bars in this order · ${Wt.closing} amber edges close loops · U^tr = Π(amber u) = e^${Wt.lUtr.toFixed(3)} · true U = e^${Wt.lU.toFixed(3)} · numbers above the bars: agreement with U^tr (%)`,
+    `Hepp 扇区：这 ${VIEW.G.edges.length} 根柱的顺序 · ${Wt.closing} 条琥珀边闭合圈 · U^tr = Π(琥珀 u) = e^${Wt.lUtr.toFixed(3)} · 真实 U = e^${Wt.lU.toFixed(3)} · 柱上的数：与 U^tr 的一致程度（%）`);
+}
+
+/* ================================================================ annealing schedule grid
+   one column per round of beta, one row per move in that round; teal = kept regrowth, coral = rejected regrowth,
+   pale = edge redraw (kept / undone); the current round is outlined */
+function drawSched() {
+  if (S.mode !== 'ais' || !SC.w) return;
+  const run = S.speed === 'bulk' ? AIS.bulk : AIS.run, c = SC.ctx, W = SC.w, H = SC.h;
+  c.clearRect(0, 0, W, H);
+  if (!run) return;
+  const R = Math.max(1, run.K - 1), M = run.L, cw = (W - 2) / R, ch = (H - 2) / M;
+  for (let r = 0; r < R; r++) for (let m = 0; m < M; m++) {
+    const code = run.hist[r] && run.hist[r][m], x = 1 + r * cw, y = 1 + m * ch;
+    let col = null, a = 1;
+    if (code === 'R+') col = TH.teal; else if (code === 'R-') col = TH.coral;
+    else if (code === 'E+') { col = TH.teal; a = 0.35; } else if (code === 'E-') { col = TH.coral; a = 0.35; } else if (code === 'N') { col = TH.faint; a = 0.4; }
+    if (col) { c.globalAlpha = a; c.fillStyle = col; c.fillRect(x + 0.5, y + 0.5, Math.max(1, cw - 1.5), Math.max(1, ch - 1.5)); c.globalAlpha = 1; }
+    else { c.strokeStyle = TH.line2; c.lineWidth = 0.6; c.strokeRect(x + 0.5, y + 0.5, Math.max(1, cw - 1.5), Math.max(1, ch - 1.5)); }
+  }
+  const cur = Math.min(run.hist.length, R) - 1;
+  if (cur >= 0) { c.strokeStyle = TH.fg; c.lineWidth = 1.2; c.strokeRect(1 + cur * cw, 0.6, cw - 0.4, H - 1.2); }
+}
+
+/* ================================================================ histogram */
+function drawHist(now) {
+  if (!HIST.dirty && now - HIST.last < 400) return;
+  HIST.dirty = false; HIST.last = now;
+  const c = HC.ctx, W = HC.w, H = HC.h; c.clearRect(0, 0, W, H);
+  const series = [[ACC.g.lws, TH.argb, TH.amber], [ACC.a.lws, TH.trgb, TH.teal]];
+  let lo = 0;
+  for (const [a] of series) if (a.length) { const s = a.slice(-20000).sort((x, y) => x - y); lo = Math.min(lo, s[Math.floor(s.length * 0.002)]); }
+  lo = Math.max(-60, Math.floor(lo - 0.5)); const hi = 0.3;
+  const padL = 34, padB = 26, padT = 10, pw = W - padL - 10, ph = H - padB - padT, NB = 54, bw = (hi - lo) / NB;
+  const dens = series.map(([a]) => { const h = new Float64Array(NB); for (const x of a) { const b = Math.floor((x - lo) / bw); if (b >= 0 && b < NB) h[b]++; } const n = a.length || 1; return h.map(v => v / (n * bw)); });
+  let ymax = 0; for (const h of dens) for (const v of h) ymax = Math.max(ymax, v); ymax = ymax || 1;
+  c.strokeStyle = TH.line; c.lineWidth = 1; c.fillStyle = TH.muted; c.font = '11px "IBM Plex Mono", monospace'; c.textAlign = 'center'; c.textBaseline = 'top';
+  const step = (hi - lo) > 24 ? 10 : (hi - lo) > 10 ? 4 : 2;
+  for (let x = Math.ceil(lo / step) * step; x <= 0; x += step) {
+    const px = padL + (x - lo) / (hi - lo) * pw; c.beginPath(); c.moveTo(px, padT); c.lineTo(px, padT + ph); c.stroke(); c.fillText(String(x), px, padT + ph + 6);
+  }
+  c.textAlign = 'right'; c.fillText('log w', W - 10, padT);
+  dens.forEach((h, si) => {
+    if (!series[si][0].length) return;
+    c.beginPath(); c.moveTo(padL, padT + ph);
+    for (let b = 0; b < NB; b++) { const xa = padL + b / NB * pw, xb = padL + (b + 1) / NB * pw, y = padT + ph - h[b] / ymax * ph; c.lineTo(xa, y); c.lineTo(xb, y); }
+    c.lineTo(padL + pw, padT + ph); c.closePath();
+    c.fillStyle = `rgba(${series[si][1]},${TH.dark ? 0.22 : 0.18})`; c.fill();
+    c.strokeStyle = series[si][2]; c.lineWidth = 1.6; c.stroke();
+  });
+  c.strokeStyle = TH.line2; c.beginPath(); c.moveTo(padL, padT + ph); c.lineTo(padL + pw, padT + ph); c.stroke();
+  const eg = est(ACC.g), ea = est(ACC.a);
+  document.getElementById('histMeta').textContent = `Var log w ${eg ? eg.vlog.toFixed(2) : '—'} · Var log W ${ea ? ea.vlog.toFixed(2) : '—'} · ${T('large-L fit', '大 L 拟合')} 0.181L+1.33 = ${(0.181 * S.L + 1.33).toFixed(2)}`;
+}
+
+/* ================================================================ readouts */
+const SUPD = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+function fmt(x, d) {
+  d = d || 5; if (!isFinite(x)) return '—'; if (x === 0) return '0';
+  const a = Math.abs(x);
+  if (a >= 1e-3 && a < 1e5) return x.toPrecision(d);
+  const e = Math.floor(Math.log10(a)), m = x / Math.pow(10, e);
+  return m.toFixed(d - 2) + '×10' + String(e).split('').map(ch => SUPD[ch]).join('');
+}
+function pullPill(s, rel) {
+  const ref = REF[S.L]; if (!ref) return '—';
+  const p = (s - ref[0]) / Math.sqrt((rel * s) ** 2 + ref[1] ** 2);
+  const cls = Math.abs(p) < 2 ? 'ok' : Math.abs(p) < 3 ? 'warn' : 'bad';
+  return `<span class="pill ${cls} mono">${p >= 0 ? '+' : ''}${p.toFixed(2)}σ</span>`;
+}
+function updateTable() {
+  inspRefresh();
+  for (const [id, A] of [['rowG', ACC.g], ['rowA', ACC.a]]) {
+    const td = document.getElementById(id).querySelectorAll('td'), e = est(A);
+    if (!e) { td[0].textContent = '—'; td[1].textContent = '—'; td[2].innerHTML = '—'; td[3].textContent = String(A.n); td[4].textContent = '—'; td[5].textContent = '—'; continue; }
+    td[0].textContent = fmt(e.s, 6); td[1].textContent = (100 * e.rel).toFixed(e.rel < 0.01 ? 3 : 2) + '%';
+    td[2].innerHTML = pullPill(e.s, e.rel); td[3].textContent = e.n.toLocaleString('en-US');
+    td[4].textContent = e.vlog.toFixed(2); td[5].textContent = e.share.toFixed(3);
+  }
+  const ref = REF[S.L];
+  const sv = `<b class="mono">s<sub>${S.L}</sub> = ${fmt(ref[0], 8)}</b>`, pv = `<b class="mono">P₂(${S.L}) = ${fmt(Math.exp(S.T.logP2), 6)}</b>`;
+  document.getElementById('refLine').innerHTML = T(`Reference ${sv}${ref[1] ? ' ± ' + fmt(ref[1], 3) : ' (exact)'} · tropical mass ${pv} (exact, from the recursion)`, `参考值 ${sv}${ref[1] ? ' ± ' + fmt(ref[1], 3) : '（精确）'} · 热带质量 ${pv}（精确，来自递推）`);
+}
+const dgBody = document.getElementById('dgBody'), dgNote = document.getElementById('dgNote');
+function updateDiagrams(now) {
+  if (!DG.dirty || now - DG.last < 900) return;
+  DG.dirty = false; DG.last = now;
+  const P2 = Math.exp(S.T.logP2), ais = S.mode === 'ais';
+  const N = ais ? ACC.a.n : ACC.g.n, totw = ais ? ACC.a.sw : ACC.g.sw;
+  if (!N) { dgBody.innerHTML = ''; dgNote.textContent = ais ? T('No finished annealed runs yet at this L.', '这个 L 还没有完成的退火轮。') : T('No global tropical draws yet at this L.', '这个 L 还没有全局热带样本。'); return; }
+  const rows = REG.list.filter(c => ais ? (c.a0n > 0 || c.aKn > 0) : c.gn > 0).map(c => {
+    const ws = ais ? c.aW : c.ws, ws2 = ais ? c.aW2 : c.ws2, m = ws / N, v = Math.max(0, ws2 / N - m * m);
+    return { c, p: (ais ? c.a0n : c.gn) / N, e: ais ? c.aKn / N : 0, q: ws / totw, s: P2 * m, rel: m > 0 ? Math.sqrt(v / N) / m : NaN, mw: (ais ? (c.aKn ? ws / c.aKn : NaN) : ws / c.gn) };
+  }).sort((a, b) => b.q - a.q || b.p - a.p);
+  const top = rows.slice(0, 12), big = Math.max(1e-12, ...top.map(r => Math.max(r.p, r.e, r.q)));
+  const bar = (cls, x, extra) => `<div class="bar ${cls}"${extra || ''}><i style="width:${(120 * x / big).toFixed(1)}px"></i><span>${(100 * x).toFixed(1)}%</span></div>`;
+  dgBody.innerHTML = top.map(r => {
+    const ci = cellOf(r.c), sel = ci === HOVER.sel ? ' class="sel"' : '';
+    const col3 = ais ? bar('v', r.p) + bar('t', r.e, ' style="margin-top:4px"') : bar('v', r.p);
+    return `<tr data-id="${r.c.id}" tabindex="0"${sel}><td class="mono">#${r.c.id + 1}</td><td><canvas width="168" height="96"></canvas></td>` +
+      `<td>${col3}</td><td>${bar('a', r.q)}</td>` +
+      `<td class="num mono">${r.s > 0 ? fmt(r.s, 5) + ` <span style="color:var(--muted)">± ${(100 * r.rel).toFixed(r.rel < 0.1 ? 1 : 0)}%</span>` : '0'}</td><td class="num mono">${isFinite(r.mw) ? fmt(r.mw, 3) : '—'}</td></tr>`;
+  }).join('');
+  dgBody.querySelectorAll('tr').forEach((tr, i) => { const rep = top[i].c.rep; if (rep) drawThumb(tr.querySelector('canvas'), rep); });
+  const rest = rows.slice(12), restQ = rest.reduce((sm, r) => sm + r.q, 0);
+  const nr = rows.length.toLocaleString('en-US'), nn = N.toLocaleString('en-US'), rq = (100 * restQ).toFixed(1);
+  const thin = rows.filter(r => (ais ? r.c.aKn : r.c.gn) < 30).length / rows.length;
+  const unitEn = ais ? 'runs' : 'draws', unitZh = ais ? '轮' : '个样本';
+  dgNote.textContent = T(`${nr} distinct diagram${rows.length > 1 ? 's' : ''} in ${nn} ${unitEn}` + (thin > 0.3 ? `; many have fewer than 30 ${unitEn}, so their shares are still noisy. ` : '. ') +
+    (rest.length ? `${rest.length} more not shown carry ${rq}% of s_L. ` : '') + `The contributions add up to ŝ_${S.L}.`,
+    `${nn} ${unitZh}里有 ${nr} 张不同的图` + (thin > 0.3 ? `；许多图不到 30 ${unitZh}，份额仍有较大噪声。` : '。') +
+    (rest.length ? `另有 ${rest.length} 张未列出，占 s_L 的 ${rq}%。` : '') + `各贡献之和等于 ŝ_${S.L}。`);
+}
+function selectClass(id) {
+  const cls = REG.list[id]; if (!cls) return;
+  const ci = cellOf(cls); HOVER.sel = HOVER.sel === ci ? -1 : ci; inspRefresh(); PULSE = { ci, t0: performance.now() }; DG.dirty = true; DG.last = 0;
+}
+dgBody.addEventListener('click', e => { const tr = e.target.closest('tr'); if (tr) selectClass(+tr.dataset.id); });
+dgBody.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { const tr = e.target.closest('tr'); if (tr) { e.preventDefault(); selectClass(+tr.dataset.id); } } });
+
+/* ================================================================ narration + step tracker */
+const STEPS = {
+  global: [['Top edge', '顶边'], ['Cut open', '剪开'], ['Fill the chain · recurse', '填链·递推'], ['Weight', '权重']],
+  ais: [['Start', '出发'], ['Raise β', '升 β'], ['Move: pick · propose · decide', '移动：选择·提议·判定'], ['Done', '结束']]
+};
+const stepsEl = document.getElementById('steps');
+function renderSteps() {
+  stepsEl.innerHTML = STEPS[S.mode].map((s, i) => `<li><span class="n">${i + 1}</span>${T(s[0], s[1])}</li>`).join('');
+}
+const dockStep = document.getElementById('dockStep');
+let CURSTEP = -1;
+function setStep(i) {
+  CURSTEP = i;
+  [...stepsEl.children].forEach((li, k) => { li.classList.toggle('on', k === i); li.classList.toggle('done', i >= 0 && k < i); });
+  const s = STEPS[S.mode][i];
+  if (dockStep) dockStep.textContent = s ? `${i + 1}/${STEPS[S.mode].length} · ${T(s[0], s[1])}` : (S.speed === 'bulk' ? T('Bulk mode', '批量模式') : T('Ready', '就绪'));
+}
+const narrEl = document.getElementById('narr');
+function narr(step, en, zh, math) {
+  setStep(step);
+  document.getElementById('nEn').textContent = en;
+  document.getElementById('nZh').textContent = zh;
+  document.getElementById('nMath').textContent = math || '';
+  narrEl.classList.remove('flash'); void narrEl.offsetWidth; narrEl.classList.add('flash');
+}
+function setWeight(Wt) {
+  const f = document.getElementById('wFill'), t = document.getElementById('wText');
+  if (!Wt) { f.style.width = '0%'; t.textContent = T('w = (U^tr/U)^{3/2} · Π u^δ   (weighing…)', 'w = (U^tr/U)^{3/2} · Π u^δ   （加权中…）'); return; }
+  const w = Math.exp(Wt.logw);
+  f.style.width = (100 * Math.max(0.02, Math.min(1, 1 + Wt.logw / 12))) + '%';
+  const core = `log U^tr = ${Wt.lUtr.toFixed(3)} · log U = ${Wt.lU.toFixed(3)} · w = ${fmt(w, 4)}`;
+  t.textContent = T(`weighed · ${core}`, `已加权 · ${core}`);
+}
+function setBeta(run) {
+  document.getElementById('betaTxt').textContent = `β = ${(run.k / run.K).toFixed(3)} · ` + T(`round ${Math.min(run.k, run.K - 1)}/${run.K - 1}`, `第 ${Math.min(run.k, run.K - 1)}/${run.K - 1} 回合`);
+  document.getElementById('logWTxt').textContent = `log W = ${run.logW.toFixed(3)}`;
+}
+function pace(ms) { return S.speed === 'quick' ? ms * 0.33 : ms; }
+const fu = x => x >= 0.01 ? x.toFixed(3) : x.toExponential(1);
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+/* ================================================================ narrated sequences */
+function* globalNarrated() {
+  const d = globalDraw(), info = sampleInfo(d.root, d.G, d.Wt);
+  if (CELLS.dirty) recomputeCells();
+  if (!info.cls.rep) info.cls.rep = d.G;
+  followClass(info.cls);
+  setView(d.G, { fresh: true, hidden: true, settle: 320, tree: { root: d.root }, Wt: d.Wt, showClosing: false }); setWeight(null);
+  pText.textContent = T('A bar appears as each edge is drawn; the amber loop markers come at the Weight step.', '每画一条边就出现一根柱；琥珀色的闭圈标记在“权重”一步出现。');
+  const om = omega(2, S.L), t = Math.exp(d.root.lt);
+  NEEDLE = { info, t0: performance.now(), dur: pace(1100) };
+  narr(0, `Draw the largest edge of the whole diagram first: t = U^(1/ω) with ω = ${om.toFixed(2)}. This time t = ${t.toFixed(3)}. The needle on the fan shows it.`,
+    `先抽整张图里最大的一条边：t = U^(1/ω)，ω = ${om.toFixed(2)}。这次 t = ${t.toFixed(3)}，扇上的指针就是它。`,
+    `ω_δ(2, L) = (1−δ)(3L−1) − 3L/2 = ${om.toFixed(3)}   (U uniform on (0,1))`);
+  yield pace(1700);
+  const order = revealOrder(d.root), per = Math.min(1, 14 / order.length);
+  const LET = VIEW.letters, extK = new Set(d.G.ext.map(v => d.G.vkey[v]));
+  setTreeInfo('Ring A appears when its top edge is drawn.', '画出顶边时，环 A 出现。');
+  for (const ev of order) {
+    VIEW.reveal.set(ev.key, performance.now()); VIEW.lastKey = ev.key;
+    const nd = ev.node, X = LET.get(nd), tX = Math.exp(nd.lt);
+    if (ev.top) {
+      CURNODE = nd;
+      const plan = chainPlan(nd, LET, extK);
+      if (nd === d.root) {
+        narr(1, `The top edge t is drawn: edge A in the diagram (teal) and the violet arc of ring A in the recursion tree. Cut it open; the rest of the diagram is a chain: ${plan.en}. The dashed part of ring A is this plan, and each Next draws one more edge of it.`,
+          `顶边 t 画好了：图里的边 A（青色），递推树里环 A 的紫弧。把它剪开，图的其余部分是一条链：${plan.zh}。环 A 的虚线部分就是这个计划，每按一次“下一步”画出其中一条边。`,
+          `chain composition drawn from the tables ch(n, L−1);  every bridge u = t_A·U^(1/(1−δ)) < t_A`);
+        setTreeInfo(`Just drawn: top edge of ring A, t_A = ${fu(tX)}. Plan: ${plan.en}.`, `刚画出：环 A 的顶边，t_A = ${fu(tX)}。计划：${plan.zh}。`);
+        yield pace(2400);
+      } else {
+        const P = nd.parent, PX = LET.get(P), bi = P.beads.findIndex(b => b.kind === 'n' && b.node === nd);
+        narr(2, `Bead ${bi + 1} of ring ${PX} is a piece with ${plural(nd.L, 'loop')}, so it is drawn by the same rule as its own ring ${X}. First its top edge: t_${X} = ${fu(tX)}, below t_${PX} = ${fu(Math.exp(P.lt))}. Its chain will be: ${plan.en}.`,
+          `环 ${PX} 的第 ${bi + 1} 个珠子是含 ${nd.L} 圈的子图，所以按同样的规则画成它自己的环 ${X}。先画它的顶边：t_${X} = ${fu(tX)}，小于 t_${PX} = ${fu(Math.exp(P.lt))}。它的链将是：${plan.zh}。`,
+          `t_${X} ~ ω t^(ω−1) on (0, t_${PX}),  ω_δ(${nd.n},${nd.L}) = ${omega(nd.n, nd.L).toFixed(3)}`);
+        setTreeInfo(`Just drawn: top edge of ring ${X}, t_${X} = ${fu(tX)} < t_${PX}. Plan: ${plan.en}.`, `刚画出：环 ${X} 的顶边，t_${X} = ${fu(tX)} < t_${PX}。计划：${plan.zh}。`);
+        yield pace(900 * per + 1300);
+      }
+    } else {
+      CURNODE = nd;
+      const k = +ev.key.split('_').pop(), m = nd.bridges.length, u = Math.exp(nd.bridges[k]);
+      narr(2, `Ring ${X}, bridge ${k + 1} of ${m}: u = ${fu(u)}, shorter than its top edge t_${X} = ${fu(tX)}. It joins bead ${k + 1} to bead ${k + 2} of ring ${X}'s chain.`,
+        `环 ${X} 的第 ${k + 1}/${m} 座桥：u = ${fu(u)}，比它的顶边 t_${X} = ${fu(tX)} 短。它连接环 ${X} 链上的第 ${k + 1} 和第 ${k + 2} 个珠子。`,
+        `u = t_${X} · U^(1/(1−δ)),  U uniform on (0,1)`);
+      setTreeInfo(`Just drawn: bridge ${k + 1} of ring ${X}, u = ${fu(u)} < t_${X} = ${fu(tX)}.`, `刚画出：环 ${X} 的第 ${k + 1} 座桥，u = ${fu(u)} < t_${X} = ${fu(tX)}。`);
+      yield pace(700 * per + 900);
+    }
+  }
+  CURNODE = null; VIEW.lastKey = null;
+  setTreeInfo('Every ring is drawn. % in a ring = how well its edges agree with U^tr.', '所有的环都画好了；环里的百分比表示它的边与 U^tr 的一致程度。');
+  setWeight(d.Wt); VIEW.showClosing = true;
+  VIEW.agree = edgeAgreement(d.G, d.Wt); VIEW.mD = diagOpacity(d.Wt.logw); VIEW.weighT0 = performance.now();
+  paramsSummary();
+  const w = Math.exp(d.Wt.logw);
+  addGlobal(d, info); if (CELLS.dirty) recomputeCells();
+  PULSE = { ci: cellOf(info.cls), t0: performance.now() };
+  const e = est(ACC.g);
+  narr(3, `Weight: w = (U^tr/U)^{3/2}·Πu^δ = ${fmt(w, 4)} ≤ 1. The point lands in the wedge of diagram #${info.cls.id + 1} on the fan, and after ${ACC.g.n.toLocaleString('en-US')} draws the estimate is ŝ_${S.L} = P₂·mean(w) = ${e ? fmt(e.s, 6) : '—'}. The % labels show where the weight is lost; coral means the true U disagrees with the tropical U^tr there.`,
+    `权重：w = (U^tr/U)^{3/2}·Πu^δ = ${fmt(w, 4)} ≤ 1。这个点落进扇上图 #${info.cls.id + 1} 的楔形；${ACC.g.n} 个样本之后，估计值 ŝ_${S.L} = P₂·mean(w) = ${e ? fmt(e.s, 6) : '—'}。百分比显示权重在哪里损失，珊瑚色表示真实 U 与热带 U^tr 在那里不一致。`,
+    `P₂(${S.L}) = ${fmt(Math.exp(S.T.logP2), 6)} (exact tropical mass) ·  agreement = P(e treated as in U^tr),  P(e ∈ T) = U_{G/e}/U`);
+  yield pace(3400);
+  NEEDLE = null;
+}
+
+function* aisNarrated() {
+  const { run, i0 } = startAis(); AIS.run = run;
+  if (CELLS.dirty) recomputeCells();
+  AIS.trail = [{ info: i0, beta: 0, jump: false }]; AIS.cur = i0; AIS.marker = null; followClass(i0.cls);
+  setView(run.G, { fresh: true, hidden: true, settle: 320, tree: { root: run.root }, Wt: run.Wt, showClosing: true }); setWeight(run.Wt); setBeta(run);
+  for (const ev of revealOrder(run.root)) VIEW.reveal.set(ev.key, performance.now() + 500 * Math.random());
+  paramsSummary();
+  const rounds = run.K - 1, Lm = run.L;
+  narr(0, `A run begins with one complete diagram drawn from the tropical rule, exactly as in global sampling (β = 0, diagram #${i0.cls.id + 1}). Then come ${rounds} rounds: in each round β goes up once, then the chain makes ${Lm} moves. Only the moves change the diagram; the grid at the top right records every one.`,
+    `一轮开始时，先按热带规则完整地抽一张图，和全局采样完全一样（β = 0，图 #${i0.cls.id + 1}）。之后有 ${rounds} 个回合：每个回合先把 β 升高一次，再让链做 ${Lm} 次移动。只有移动会改变图；右上角的格子记录每一次移动。`,
+    `target π_β ∝ μ_δ · w^β,   β_k = k/K,   K = ${run.K}`);
+  yield pace(2600);
+  for (;;) {
+    const ev = run.advance();
+    if (ev.type === 'beta') {
+      setBeta(run);
+      if (run.k < run.K) narr(1, `Round ${run.k} of ${rounds}: raise β from ${ev.b0.toFixed(2)} to ${ev.b1.toFixed(2)} and bank Δβ·log w = ${ev.inc.toFixed(3)} (log W = ${run.logW.toFixed(3)}). The diagram does not change here; the next ${Lm} clicks are this round's moves.`,
+        `第 ${run.k}/${rounds} 回合：把 β 从 ${ev.b0.toFixed(2)} 升到 ${ev.b1.toFixed(2)}，记下 Δβ·log w = ${ev.inc.toFixed(3)}（log W = ${run.logW.toFixed(3)}）。这一步图不变；接下来 ${Lm} 次点击是这个回合的移动。`,
+        `log W = Σ_k (β_k − β_(k−1)) · log w(x_(k−1))`);
+      else narr(1, `Last step: β reaches 1 and the final Δβ·log w = ${ev.inc.toFixed(3)} is banked (log W = ${run.logW.toFixed(3)}). No more moves in this run.`,
+        `最后一步：β 到达 1，记下最后的 Δβ·log w = ${ev.inc.toFixed(3)}（log W = ${run.logW.toFixed(3)}）。这一轮不再移动。`,
+        `log W = Σ_k (β_k − β_(k−1)) · log w(x_(k−1))`);
+      yield pace(run.k <= 2 ? 1600 : 600);
+    } else if (ev.type === 'move') {
+      if (ev.kind === 'none') continue;
+      const k = ev.round, m = ev.moveIdx, detail = k <= 2;
+      const keptEn = ev.accepted ? 'kept' : 'rejected and the old one comes back', keptZh = ev.accepted ? '保留' : '被拒绝，旧的恢复';
+      const cmpEn = ev.uAcc < ev.ratio ? 'below' : 'above', cmpZh = ev.uAcc < ev.ratio ? '小于' : '大于';
+      if (ev.kind === 'regen') {
+        const oldTree = ev.accepted ? { root: run.root, swap: { from: ev.info.to, to: ev.info.from } } : { root: run.root };
+        const propTree = ev.accepted ? { root: run.root } : { root: run.root, swap: { from: ev.info.from, to: ev.info.to } };
+        if (detail) {
+          VIEW.tint.clear(); setView(ev.oldG, { tree: oldTree });
+          const RX = (VIEW.letters && VIEW.letters.get(ev.info.from)) || '?';
+          const far = performance.now() + 1e9;
+          for (const key of subtreeKeys(ev.info.from)) VIEW.tint.set(key, { color: TH.amber, until: far });
+          CURNODE = ev.info.from;
+          narr(2, `Round ${k}, move ${m} of ${Lm} · pick: ring ${RX} is chosen at random (${plural(ev.info.loops, 'loop')}). Its whole subtree, in amber, is the part this move will regenerate.`,
+            `第 ${k} 回合第 ${m}/${Lm} 次移动 · 选择：随机选中环 ${RX}（${ev.info.loops} 圈）。它的整棵子树（琥珀色）就是这次要重新生成的部分。`,
+            `move type: regrow a subtree (60% of moves); the other 40% redraw one edge`);
+          yield pace(1600);
+          VIEW.tint.clear();
+          setView(ev.propG, { ghost: TH.faint, growNew: true, tintNew: TH.teal, tintDur: 1e9, tree: propTree, Wt: ev.propW });
+          CURNODE = ev.info.to;
+          narr(2, `Round ${k}, move ${m} · propose: throw that subtree away and grow a new one in its place from the exact tropical rule (teal). Same legs, still below the same parent edge; everything outside ring ${RX} stays. log w would go ${ev.oldLw.toFixed(3)} → ${ev.newLw.toFixed(3)}.`,
+            `第 ${k} 回合第 ${m} 次移动 · 提议：扔掉这棵子树，在原处按精确的热带规则长出一棵新的（青色）。腿不变，仍在同一条父顶边之下；环 ${RX} 以外的部分不动。log w 将从 ${ev.oldLw.toFixed(3)} 变为 ${ev.newLw.toFixed(3)}。`,
+            `proposal = exact tropical distribution of the subtree, given everything else`);
+          yield pace(1800);
+          VIEW.tint.clear();
+          if (ev.accepted) { setView(run.G, { tree: { root: run.root }, Wt: run.Wt }); const until = performance.now() + 1500; for (const key of subtreeKeys(ev.info.to)) VIEW.tint.set(key, { color: TH.teal, until }); }
+          else setView(run.G, { ghost: TH.coral, growNew: true, tree: { root: run.root }, Wt: run.Wt });
+          CURNODE = null;
+          narr(2, `Round ${k}, move ${m} · decide: keep the new subtree with probability min(1, (w′/w)^β) = ${ev.ratio.toFixed(3)} at β = ${ev.beta.toFixed(2)}. A uniform random number came out ${ev.uAcc.toFixed(3)}, ${cmpEn} that, so the new subtree is ${keptEn}.`,
+            `第 ${k} 回合第 ${m} 次移动 · 判定：以概率 min(1, (w′/w)^β) = ${ev.ratio.toFixed(3)}（β = ${ev.beta.toFixed(2)}）保留新子树。均匀随机数是 ${ev.uAcc.toFixed(3)}，${cmpZh}它，所以新子树${keptZh}。`,
+            `accept if U < (w′/w)^β`);
+          yield pace(1800);
+        } else {
+          setView(ev.propG, { ghost: TH.faint, growNew: true, tintNew: ev.accepted ? TH.teal : TH.coral, tintDur: 900, tree: propTree, Wt: ev.propW });
+          CURNODE = ev.info.to;
+          const RX = (VIEW.letters && VIEW.letters.get(ev.info.to)) || '?';
+          narr(2, `Round ${k}, move ${m} of ${Lm}: regrow ring ${RX} (${plural(ev.info.loops, 'loop')}) from the tropical rule; keep with ${ev.ratio.toFixed(3)}, random ${ev.uAcc.toFixed(3)} → ${ev.accepted ? 'kept' : 'rejected'}.`,
+            `第 ${k} 回合第 ${m}/${Lm} 次移动：按热带规则重长环 ${RX}（${ev.info.loops} 圈）；保留概率 ${ev.ratio.toFixed(3)}，随机数 ${ev.uAcc.toFixed(3)} → ${ev.accepted ? '保留' : '拒绝'}。`,
+            `β = ${ev.beta.toFixed(2)},  log w: ${ev.oldLw.toFixed(3)} → ${ev.newLw.toFixed(3)}`);
+          yield pace(620);
+          if (!ev.accepted) { setView(run.G, { ghost: TH.coral, growNew: true, tree: { root: run.root }, Wt: run.Wt }); yield pace(300); }
+          CURNODE = null;
+        }
+      } else {
+        const E = ev.oldG.edges.find(e => e.key === ev.info.key), nm = E ? edgeName(E) : '', u0 = Math.exp(ev.info.from), u1 = Math.exp(ev.info.to);
+        if (detail) {
+          VIEW.tint.clear(); setView(ev.oldG, { tree: { root: run.root } });
+          VIEW.tint.set(ev.info.key, { color: TH.amber, until: performance.now() + 1e9 });
+          narr(2, `Round ${k}, move ${m} of ${Lm} · pick: one edge is chosen at random, ${nm} (u = ${fu(u0)}). Only its length will change; the diagram keeps its shape.`,
+            `第 ${k} 回合第 ${m}/${Lm} 次移动 · 选择：随机选中一条边，${nm}（u = ${fu(u0)}）。只改它的长度，图的形状不变。`,
+            `move type: redraw one edge (40% of moves)`);
+          yield pace(1400);
+          VIEW.tint.clear();
+          VIEW.tint.set(ev.info.key, { color: ev.accepted ? TH.teal : TH.coral, until: performance.now() + 1500 });
+          setView(run.G, { tree: { root: run.root }, Wt: run.Wt });
+          narr(2, `Round ${k}, move ${m} · propose and decide: new length u = ${fu(u0)} → ${fu(u1)} from the tropical rule. Keep it with probability ${ev.ratio.toFixed(3)}; the random number came out ${ev.uAcc.toFixed(3)}, so the change is ${ev.accepted ? 'kept' : 'undone'}.`,
+            `第 ${k} 回合第 ${m} 次移动 · 提议与判定：按热带规则得到新长度 u = ${fu(u0)} → ${fu(u1)}。保留概率 ${ev.ratio.toFixed(3)}；随机数是 ${ev.uAcc.toFixed(3)}，所以这个改变${ev.accepted ? '保留' : '撤销'}。`,
+            `log w: ${ev.oldLw.toFixed(3)} → ${ev.newLw.toFixed(3)}`);
+          yield pace(1500);
+        } else {
+          VIEW.tint.set(ev.info.key, { color: ev.accepted ? TH.teal : TH.coral, until: performance.now() + 700 });
+          setView(run.G, { tree: { root: run.root }, Wt: run.Wt });
+          narr(2, `Round ${k}, move ${m} of ${Lm}: redraw ${nm}, u = ${fu(u0)} → ${fu(u1)}; keep with ${ev.ratio.toFixed(3)}, random ${ev.uAcc.toFixed(3)} → ${ev.accepted ? 'kept' : 'undone'}.`,
+            `第 ${k} 回合第 ${m}/${Lm} 次移动：重抽${nm}，u = ${fu(u0)} → ${fu(u1)}；保留概率 ${ev.ratio.toFixed(3)}，随机数 ${ev.uAcc.toFixed(3)} → ${ev.accepted ? '保留' : '撤销'}。`,
+            `log w: ${ev.oldLw.toFixed(3)} → ${ev.newLw.toFixed(3)}`);
+          yield pace(520);
+        }
+      }
+      setWeight(run.Wt); paramsSummary();
+      const info = sampleInfo(run.root, run.G, run.Wt); AIS.cur = info; followClass(info.cls);
+      AIS.trail.push({ info, beta: run.k / run.K, jump: ev.kind === 'regen' && ev.accepted });
+      if (AIS.trail.length > 80) AIS.trail.shift();
+    } else {
+      const fin = finishAis(run); if (CELLS.dirty) recomputeCells();
+      const e = est(ACC.a);
+      narr(3, `Run finished in diagram #${fin.cls.id + 1}: W = e^(log W) = ${fmt(Math.exp(run.logW), 4)}, ${(100 * run.acc / Math.max(1, run.tries)).toFixed(0)}% of moves kept. After ${ACC.a.n} runs, ŝ_${S.L} = P₂·mean(W) = ${e ? fmt(e.s, 6) : '—'}. The next click starts a new run with a fresh tropical diagram.`,
+        `这一轮停在图 #${fin.cls.id + 1}：W = e^(log W) = ${fmt(Math.exp(run.logW), 4)}，${(100 * run.acc / Math.max(1, run.tries)).toFixed(0)}% 的移动被保留。${ACC.a.n} 轮之后，ŝ_${S.L} = P₂·mean(W) = ${e ? fmt(e.s, 6) : '—'}。下一次点击会用一张新的热带图开始新的一轮。`,
+        `E[W] = s_L / P₂(L) for any K: no β-discretization bias`);
+      yield pace(2300);
+      return;
+    }
+  }
+}
+
+/* ================================================================ bulk mode */
+function bulkWork(now) {
+  const t0 = performance.now(), budget = 11;
+  if (S.mode === 'global') {
+    let last = null, lastInfo = null;
+    while (performance.now() - t0 < budget) { last = globalDraw(); lastInfo = addGlobal(last); }
+    if (last && now - AIS.lastView > BULK_SHOW_MS) { setView(last.G, { fresh: true, settle: 260, tree: { root: last.root }, Wt: last.Wt, showClosing: true }); setWeight(last.Wt); paramsSummary(); followClass(lastInfo.cls); SHOWN = DOTS[DOTS.length - 1] || null; AIS.lastView = now; }
+  } else {
+    if (!AIS.bulk) { const { run, i0 } = startAis(); AIS.bulk = run; AIS.trail = [{ info: i0, beta: 0, jump: false }]; AIS.cur = i0; }
+    while (performance.now() - t0 < budget) {
+      const run = AIS.bulk, ev = run.advance();
+      if (ev.type === 'done') {
+        finishAis(run);
+        const { run: nr, i0 } = startAis(); AIS.bulk = nr; AIS.trail = [{ info: i0, beta: 0, jump: false }]; AIS.cur = i0;
+      } else if (ev.type === 'move' && ev.accepted && ev.kind === 'regen' && now - AIS.lastTrail > 60) {
+        AIS.lastTrail = now;
+        const info = sampleInfo(run.root, run.G, run.Wt); AIS.cur = info; AIS.trail.push({ info, beta: run.k / run.K, jump: true });
+        if (AIS.trail.length > 80) AIS.trail.shift();
+      }
+    }
+    if (now - AIS.lastView > BULK_SHOW_AIS_MS) { setView(AIS.bulk.G, { growNew: true, tintNew: TH.teal, tintDur: 300, tree: { root: AIS.bulk.root }, Wt: AIS.bulk.Wt, showClosing: true }); setWeight(AIS.bulk.Wt); setBeta(AIS.bulk); paramsSummary(); if (AIS.cur) followClass(AIS.cur.cls); AIS.lastView = now; }
+  }
+  CELLS.dirty = true;
+}
+
+/* ================================================================ main loop + controls */
+let lastTable = 0;
+function frame(now) {
+  if (S.speed === 'bulk') { if (S.playing || S.stepOnce) { bulkWork(now); if (S.stepOnce) S.stepOnce--; } }
+  else if ((S.playing && now >= S.nextAt) || S.stepOnce) {
+    if (S.stepOnce) S.stepOnce--;
+    const mk = () => (S.mode === 'global' ? globalNarrated() : aisNarrated());
+    if (!S.gen) S.gen = mk();
+    let r = S.gen.next();
+    if (r.done) { S.gen = mk(); r = S.gen.next(); }
+    S.nextAt = now + r.value;
+  }
+  if (CELLS.dirty) recomputeCells();
+  for (let i = 0; i < CELLS.cur.length; i++) CELLS.cur[i] += ((CELLS.tgt[i] ?? 1) - CELLS.cur[i]) * 0.12;
+  if (VIEW.G && now < (VIEW.relaxUntil || 0)) relax(VIEW.G, POS, 2);
+  drawFan(now); drawGraph(now, GR); drawGraph(now, GR2); drawTree(now, TR); drawTree(now, TR2); drawParams(now); drawSched(); drawHist(now); updateDiagrams(now);
+  if (now - lastTable > 250) { updateTable(); lastTable = now; }
+  requestAnimationFrame(frame);
+}
+
+function pressSeg(id, v) { document.querySelectorAll('#' + id + ' button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === v))); }
+function introNarr() {
+  setTreeInfo(TREE_DEFAULT);
+  if (S.speed === 'bulk') { setStep(-1); narr(-1, 'Bulk mode: thousands of samples per second with no narration. The panels show the latest sample every half second. Switch to Slow to follow one sample step by step.', '批量模式：每秒几千个样本，没有解说；各面板每半秒显示最新的样本。切换到“Slow”可一步一步跟随一个样本。', S.mode === 'ais' ? 'E[W] = s_L / P₂(L)' : 's_L = P₂(L) · E_μ[w]'); return; }
+  if (S.mode === 'ais') narr(-1, 'Annealed importance sampling: one chain per run, walked from the tropical measure to the true one.', '退火重要性采样：每轮一条链，从热带测度走到真实测度。', 'π_β ∝ μ_δ · w^β,  β: 0 → 1');
+  else narr(-1, 'Global tropical sampling: independent exact draws from the tropical measure, each reweighted by w.', '全局热带采样：从热带测度独立精确抽样，每个样本用 w 加权。', 's_L = P₂(L) · E_μ[w]');
+}
+function onModeChange(v) {
+  S.mode = v; pressSeg('segMode', v); document.documentElement.dataset.mode = v; DG.dirty = true; DG.last = 0; S.gen = null; NEEDLE = null; S.nextAt = 0; CURNODE = null;
+  document.getElementById('fieldK').hidden = v !== 'ais'; document.getElementById('betaBox').hidden = v !== 'ais';
+  AIS.trail = []; AIS.cur = null; AIS.bulk = null;
+  renderSteps(); introNarr();
+  HIST.dirty = true;
+}
+function onLChange(L) {
+  S.L = L; S.T = buildTables(L);   /* K (β steps) starts at 20 and keeps the viewer's choice across L */  document.getElementById('rngK').value = S.K; document.getElementById('outK').textContent = S.K;
+  resetData(); resetIns(); prefill(L <= 6 ? 160 : 220); HIST.dirty = true;
+  { const top = REG.list.slice().sort((a, b) => b.count - a.count)[0]; if (top) followClass(top); }
+  VIEW.G = null; VIEW.keys = new Set(); VIEW.tree = null; VIEW.Wt = null;
+  pText.textContent = msg(P_DEFAULT);
+}
+const selL = document.getElementById('selL');
+for (let L = 1; L <= LMAX; L++) { const o = document.createElement('option'); o.value = L; o.textContent = L; selL.appendChild(o); }
+selL.value = S.L;
+selL.addEventListener('change', () => onLChange(+selL.value));
+document.querySelectorAll('#segMode button').forEach(b => b.addEventListener('click', () => onModeChange(b.dataset.v)));
+document.querySelectorAll('#segSpeed button').forEach(b => b.addEventListener('click', () => {
+  const v = b.dataset.v, wasBulk = S.speed === 'bulk'; S.speed = v; pressSeg('segSpeed', v);
+  if (wasBulk !== (v === 'bulk')) { S.gen = null; NEEDLE = null; AIS.bulk = null; S.nextAt = 0; CURNODE = null; introNarr(); }
+}));
+const rngK = document.getElementById('rngK');
+rngK.addEventListener('input', () => { document.getElementById('outK').textContent = rngK.value; });
+rngK.addEventListener('change', () => {
+  /* a new K starts the annealing statistics afresh (global tropical numbers do not depend on K) */
+  S.K = +rngK.value; ACC.a = newAcc(); DOTS = DOTS.filter(d => d.mode !== 'a'); AIS.bulk = null; AIS.run = null; AIS.trail = []; AIS.cur = null;
+  for (const c of REG.list) { c.a0n = 0; c.aKn = 0; c.aW = 0; c.aW2 = 0; }
+  if (S.mode === 'ais') { S.gen = null; S.nextAt = 0; }
+  HIST.dirty = true; DG.dirty = true; DG.last = 0; lastTable = 0;
+  narr(-1, `K = ${S.K}: the annealing statistics restarted, so the error and Var log W now describe runs with this K only. Larger K means more rounds per run and a narrower spread of log W.`,
+    `K = ${S.K}：退火统计已重新开始，误差和 Var log W 只反映这个 K 的各轮。K 越大，每轮的回合越多，log W 的分布越窄。`,
+    `Var log W ≈ V_f + c/K`);
+});
+const btnPlay = document.getElementById('btnPlay');
+function playLabel() { document.getElementById('playTxt').textContent = S.playing ? T('Pause', '暂停') : T('Play', '播放'); }
+btnPlay.addEventListener('click', () => { S.playing = !S.playing; playLabel(); if (S.playing) S.nextAt = 0; });
+/* after a mouse click, give focus back to the page so Space and → keep working as shortcuts */
+document.querySelector('.dock').addEventListener('click', e => { if (e.detail > 0) { const b = e.target.closest('button'); if (b) b.blur(); } });
+function nextStep() { if (S.playing) { S.playing = false; playLabel(); } S.stepOnce = Math.min(5, (S.stepOnce || 0) + 1); }
+document.getElementById('btnStep').addEventListener('click', nextStep);
+document.addEventListener('keydown', e => {
+  const t = e.target, tag = (t.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'select' || tag === 'textarea' || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (t.closest && t.closest('#dgBody')) return;
+  if (e.key === 'ArrowRight' || e.key === 'n') { e.preventDefault(); nextStep(); }
+  else if (e.key === ' ' && tag !== 'button') { e.preventDefault(); btnPlay.click(); }
+});
+document.getElementById('btnClear').addEventListener('click', () => { resetData(); resetIns(); HIST.dirty = true; });
+
+function applyLang() {
+  document.documentElement.dataset.lang = LANG;
+  pressSeg('segLang', LANG); renderSteps(); setStep(CURSTEP); playLabel();
+  treeInfo.textContent = msg(TREEMSG);
+  if (!(FOCUS && FOCUS.edge)) { if (VIEW.Wt && VIEW.showClosing && VIEW.G) paramsSummary(); else pText.textContent = msg(P_DEFAULT); }
+  if (VIEW.Wt && VIEW.showClosing) setWeight(VIEW.Wt); else setWeight(null);
+  inspRefresh(); updateGmeta(); updateTable(); HIST.dirty = true; HIST.last = 0; DG.dirty = true; DG.last = 0;
+}
+document.querySelectorAll('#segLang button').forEach(b => b.addEventListener('click', () => {
+  LANG = b.dataset.v; try { localStorage.setItem('tfs-lang', LANG); } catch (e) {}
+  applyLang();
+}));
+readTheme();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTheme);
+new MutationObserver(readTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+onLChange(S.L);
+onModeChange('global');
+applyLang();
+requestAnimationFrame(frame);
+
+window.__tfs = {
+  fanCheck() {
+    const g = fanG(), c = FAN.ctx; c.font = FAN_FONT;
+    const labs = FAN_CALLS.flatMap(cl => LANG === 'zh' ? cl.zh : cl.en), maxw = Math.max(...labs.map(t => c.measureText(t).width));
+    return { lang: LANG, W: Math.round(g.W), H: Math.round(g.H), R: Math.round(g.R), wide: g.wide, labelsRight: g.wide ? Math.round(g.lx + maxw) : null, fanLeft: Math.round(g.cx - 0.95 * (g.R + 17) - 8), fanRight: Math.round(g.cx + 0.95 * (g.R + 17) + 8), lx: Math.round(g.lx) };
+  },
+  buildTables, gen1PI, flatten, weigh, AisRun, topoKey, edgeAgreement, setRng: s => { rng = makeRng(s); },
+  directMean(L, N) { const T = buildTables(L); let sw = 0, sw2 = 0; for (let i = 0; i < N; i++) { const r = gen1PI(T, 2, L, 0, 0, null), G = flatten(r), W = weigh(G); if (W.closing !== L || G.nv !== 2 * L || G.edges.length !== 3 * L - 1) return 'bad structure'; const w = Math.exp(W.logw); sw += w; sw2 += w * w; } const m = sw / N; return { s: Math.exp(T.logP2) * m, rel: Math.sqrt((sw2 / N - m * m) / N) / m }; },
+  aisMean(L, K, N) { const T = buildTables(L); let sw = 0, sw2 = 0; for (let i = 0; i < N; i++) { const run = new AisRun(T, L, K); let ev; do { ev = run.advance(); } while (ev.type !== 'done'); const w = Math.exp(run.logW); sw += w; sw2 += w * w; } const m = sw / N; return { s: Math.exp(T.logP2) * m, rel: Math.sqrt((sw2 / N - m * m) / N) / m }; },
+  shareSum() { const P2 = Math.exp(S.T.logP2), Ng = ACC.g.n; return { sumContrib: REG.list.reduce((s, c) => s + P2 * c.ws / Ng, 0), est: est(ACC.g).s, classes: REG.list.length }; }
+};
+})();
+</script>
+
+</body>
+</html>
