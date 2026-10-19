@@ -369,12 +369,7 @@ html:not([data-order="beads"]) .order-beads{display:none!important}
   </section>
 
   <section class="card scene">
-    <div class="card-head"><h2><span class="en">2 · How the diagram is built</span><span class="zh">2 · 这张图怎样造出来</span></h2><div class="seg only-global" id="segOrder" role="group" aria-label="Order of drawing"><button type="button" data-v="clasp" aria-pressed="true"><span class="en">Clasp first</span><span class="zh">先扣子</span></button><button type="button" data-v="beads" aria-pressed="false"><span class="en">Beads first</span><span class="zh">先串珠子</span></button></div><p class="hint only-diagram"><span class="en">Left: the subset recursion. Each row is one step: its bar is split among the edges still left, in proportion to the probability that each one is the largest; the filled piece is the edge drawn. Right: the same diagram.</span><span class="zh">左：子集递推。每一行是一步：横条按“剩下的每条边是最大边”的概率分给这些边，填色的那段就是抽中的边。右：同一张图。</span></p><p class="hint no-diagram"><span class="en">Top: the same draw as a necklace, each smaller 1PI piece a bead in its own capsule. Left: the recursion tree. Right: the diagram. Ring A is the loop through top edge A; each smaller ring is a piece drawn by the same rule. Hover the tree or the diagram to see the match.</span><span class="zh">上：同一个样本画成项链，每个更小的 1PI 块是自己胶囊里的一颗珠子。左：递推树。右：图。环 A 是经过顶边 A 的圈；每个更小的环是按同样规则画出的一块。悬停树或图可看到对应关系。</span></p></div>
-    <figure class="pane no-diagram">
-      <div class="pane-head"><h3><span class="en">The necklace</span><span class="zh">项链</span></h3><p class="hint"><span class="en">clasp = largest edge of a piece · beads = smaller 1PI diagrams · threads = bridges · pendants = external legs</span><span class="zh">扣子 = 一块里最大的边 · 珠子 = 更小的 1PI 图 · 线 = 桥 · 吊坠 = 外腿</span></p></div>
-      <canvas id="cvNeck" data-inset="20" role="img" aria-label="The current diagram drawn as nested necklaces"></canvas>
-      <p class="hint" id="neckInfo"></p>
-    </figure>
+    <div class="card-head"><h2><span class="en">2 · How the diagram is built</span><span class="zh">2 · 这张图怎样造出来</span></h2><div class="seg only-global" id="segOrder" role="group" aria-label="Order of drawing"><button type="button" data-v="clasp" aria-pressed="true"><span class="en">Clasp first</span><span class="zh">先扣子</span></button><button type="button" data-v="beads" aria-pressed="false"><span class="en">Beads first</span><span class="zh">先串珠子</span></button></div><p class="hint only-diagram"><span class="en">Left: the subset recursion. Each row is one step: its bar is split among the edges still left, in proportion to the probability that each one is the largest; the filled piece is the edge drawn. Right: the same diagram.</span><span class="zh">左：子集递推。每一行是一步：横条按“剩下的每条边是最大边”的概率分给这些边，填色的那段就是抽中的边。右：同一张图。</span></p><p class="hint no-diagram"><span class="en">Left: the recursion tree. Right: the same diagram. Ring A is the loop through top edge A; each smaller ring is a piece drawn by the same rule. Hover either side to see the match.</span><span class="zh">左：递推树。右：同一张图。环 A 是经过顶边 A 的圈；每个更小的环是按同样规则画出的一块。悬停任一边可看到对应关系。</span></p></div>
     <div class="pair">
       <figure class="pane">
         <div class="pane-head"><h3><span class="no-diagram"><span class="en">Recursion tree</span><span class="zh">递推树</span></span><span class="only-diagram"><span class="en">Subset recursion</span><span class="zh">子集递推</span></span></h3><p class="hint"><span class="no-diagram"><span class="en">one ring per loop · same letters as the diagram</span><span class="zh">每个圈一个环 · 字母与图相同</span></span><span class="only-diagram"><span class="en">one row per step · </span><span class="zh">每步一行 · </span>$P(e) = \frac{J(γ∖e)}{ω(γ∖e)\,J(γ)}$</span></p></div>
@@ -406,7 +401,7 @@ html:not([data-order="beads"]) .order-beads{display:none!important}
     <ol class="rules">
       <li class="no-diagram"><span class="en"><b>A ring is one loop of the diagram.</b> Its thick violet arc is the top edge, the largest $u$ in that piece; the same letter marks that edge in the diagram. Going round the rest of the ring you meet beads joined by gray bridges, and every bridge is shorter than the top edge.</span><span class="zh"><b>一个环就是图里的一个圈。</b>粗紫弧是顶边，即这块里最大的 $u$；图里同一个字母标出这条边。沿环的其余部分是由灰色桥连起的珠子，每座桥都比顶边短。</span></li>
       <li class="no-diagram"><span class="en"><b>A bead is a vertex or a smaller piece.</b> A dot is one vertex (an amber stub means it carries an external leg). A thick light segment is a piece that still has loops; it is drawn by the same rule as its own ring, one column to the right.</span><span class="zh"><b>珠子是一个顶点或一块更小的子图。</b>点是单个顶点（琥珀短线表示带外腿）；粗浅色段是仍含圈的子图，它按同样的规则画成右边一列里自己的环。</span></li>
-      <li class="only-global order-beads"><span class="en"><b>Beads first.</b> The tables first fix only the sizes: at every level, how many beads and how the loops and pendants are shared out (dashed outlines). Then each bead is strung completely before it is used, innermost first: its threads, then its clasp, and a smaller 1PI diagram is finished. Finished beads are strung on the next thread, and the next clasp closes them. Lengths are drawn in the units of the necklace being made (its clasp = 1) and scaled when it is hung in the next one, so this is the same exact draw, told from the inside out.</span><span class="zh"><b>先串珠子。</b>先由表只定下大小：每一层有几颗珠子、圈和吊坠怎么分（虚线轮廓）。然后每颗珠子在用之前先完整地穿好，从最里面开始：先穿线，再扣上扣子，一个更小的 1PI 图就做好了。做好的珠子再穿到外一层的线上，由外一层的扣子扣起来。长度都以正在穿的那条项链为单位（它的扣子 = 1），挂到外一层时再整体缩放，所以这是同一个精确的抽样，只是从里往外讲。</span></li>
+      <li class="only-global order-beads"><span class="en"><b>Beads first.</b> The tables first fix only the sizes: at every level, how many beads and how the loops and pendants are shared out (the dashed rings). Then each bead is strung completely before it is used, innermost first: its threads, then its clasp, and a smaller 1PI diagram is finished. Finished beads are strung on the next thread, and the next clasp closes them. Lengths are drawn in the units of the necklace being made (its clasp = 1) and scaled when it is hung in the next one, so this is the same exact draw, told from the inside out.</span><span class="zh"><b>先串珠子。</b>先由表只定下大小：每一层有几颗珠子、圈和吊坠怎么分（虚线的环）。然后每颗珠子在用之前先完整地穿好，从最里面开始：先穿线，再扣上扣子，一个更小的 1PI 图就做好了。做好的珠子再穿到外一层的线上，由外一层的扣子扣起来。长度都以正在穿的那条项链为单位（它的扣子 = 1），挂到外一层时再整体缩放，所以这是同一个精确的抽样，只是从里往外讲。</span></li>
       <li class="only-global order-clasp"><span class="en"><b>Each Next draws one edge.</b> First a ring's top edge, whose dashed part is the plan for its chain; then, along the chain, its bridges and inner rings in order. The new edge is pink in the diagram, the tree and the bars. The click after the last edge is Weight: it gives $w$, drops the point on the fan and updates the estimate at once; % labels then show how far the true $U$ agrees with the tropical $U^{tr}$, and coral marks where $w$ loses weight.</span><span class="zh"><b>每按一次“下一步”画一条边。</b>先画一个环的顶边（虚线部分是这条链的计划），再沿着链依次画桥和里面的环。新画的边在图、树和柱状图里都是粉色。最后一条边之后的那一下是“权重”：同时给出 $w$、把点落到扇上并更新估计值；百分比显示真实 $U$ 与热带 $U^{tr}$ 的一致程度，珊瑚色标出权重损失的地方。</span></li>
       <li class="only-diagram"><span class="en"><b>Each Next draws one edge, largest first.</b> Among the edges still left, edge e is the largest with probability $\frac{J(γ∖e)}{ω(γ∖e)\,J(γ)}$, read off the table $J$ over all $2^E$ edge subsets of this one diagram. The first edge gets $α = 1$; each later one is smaller by a factor $ξ^{1/ω(γ)}$ with $ξ$ uniform on $(0,1)$. Violet means the edge closes a loop of what is left, so its $α$ is a factor of $U^{tr}$; gray means it is a bridge of what is left. The order of all $E$ edges is the Hepp sector.</span><span class="zh"><b>每按一次“下一步”画一条边，从大到小。</b>在剩下的边里，边 e 是最大的概率为 $\frac{J(γ∖e)}{ω(γ∖e)\,J(γ)}$，查自这张图全部 $2^E$ 个边子集上的表 $J$。第一条边取 $α = 1$；之后每条边再乘上一个因子 $ξ^{1/ω(γ)}$（$ξ$ 在 $(0,1)$ 上均匀分布）。紫色表示这条边闭合剩余部分的一个圈，它的 $α$ 是 $U^{tr}$ 的因子；灰色表示它是剩余部分的桥。全部 $E$ 条边的顺序就是 Hepp 扇区。</span></li>
       <li class="only-diagram"><span class="en"><b>The price is the table.</b> $J$ has $2^E$ entries for every diagram: $2^{20} ≈ 10^6$ at $L = 7$, $2^{29} ≈ 5×10^8$ at $L = 10$, and the number of diagrams grows factorially. That is why this mode stops at $L = 7$, and why the paper moves on to global tropical sampling, which never lists diagrams.</span><span class="zh"><b>代价是这张表。</b>每张图的 $J$ 有 $2^E$ 项：$L = 7$ 时 $2^{20} ≈ 10^6$，$L = 10$ 时 $2^{29} ≈ 5×10^8$，而图的数目按阶乘增长。所以这个模式只到 $L = 7$，论文也因此转向从不列举图的全局热带采样。</span></li>
@@ -1723,137 +1718,6 @@ function attachTreeHover(O) {
   cv.addEventListener('pointerleave', () => { if (FOCUS && FOCUS.node) FOCUS = null; setRich(treeInfo, msg(TREEMSG)); });
 }
 
-/* ================================================================ the necklace (workbench)
-   One flat box per necklace (one per loop of the diagram). In a box, the beads sit on the string joined by threads
-   (bridges) and the clasp (top edge) arches over them. A bead is a vertex or a finished smaller necklace, drawn as a
-   bead with its letter; the threads attach to its two ends. No wires: every leg carries a tag saying what it hangs
-   on, worked out by following the leg outwards: an external leg p or -p, or the end of a clasp t or thread u of an
-   outer necklace. Boxes are stacked by depth, the outermost necklace at the bottom. */
-function neckState(N, now) {
-  const tp = revealP('t' + N.uid, now);
-  let open = tp > 0;
-  for (let k = 0; k < N.bridges.length && !open; k++) if (revealP('b' + N.uid + '_' + k, now) > 0) open = true;
-  return { tp, open, closed: tp >= 1 };
-}
-const NB = { VS: 28, CS: 42, G: 30, PAD: 14, TOP: 46, ROW: 14, TAG: 34, BOT: 4, GAPX: 14, GAPY: 12 };
-function neckBoxes(root, sub) {
-  const boxes = [], post = [], byNode = new Map();
-  (function visit(N, P, bi, depth) {
-    const box = { N, P, bi, depth, slots: [] };
-    boxes.push(box); byNode.set(N, box);
-    let x = NB.PAD;
-    N.beads.forEach((b, i) => {
-      const ch = b.kind === 'n' ? sub(b.node) : null;
-      const w = ch ? Math.max(NB.CS, (ch.n - 2) * NB.VS) : NB.VS;
-      box.slots.push({ b, ch, x, w }); x += w + (i < N.beads.length - 1 ? NB.G : 0);
-      if (ch) visit(ch, N, i, depth + 1);
-    });
-    box.w = Math.max(x + NB.PAD, 120); box.h = NB.TOP + NB.ROW + NB.TAG + NB.BOT;
-    post.push(box);
-  })(root, null, -1, 0);
-  /* what a leg (label lab of necklace N) hangs on: follow it outwards */
-  const tag = (N, lab) => {
-    for (;;) {
-      const box = byNode.get(N);
-      if (!box.P) return lab === 0 ? { t: 'p', ext: true } : { t: '−p', ext: true };
-      const P = box.P, i = box.bi, last = P.beads.length - 1;
-      if (lab === 0) return i === 0 ? { t: 't', s: null, P } : { t: 'u', s: i, P };
-      if (lab === 1) return i === last ? { t: 't', s: null, P } : { t: 'u', s: i + 1, P };
-      lab = P.beads[i].labels[lab - 2]; N = P;
-    }
-  };
-  return { boxes, post, byNode, tag };
-}
-const NECK = setupCanvas(document.getElementById('cvNeck'), 0.34, 230, 460);
-function drawNecklace(now) {
-  const c = NECK.ctx, W = NECK.w, H = NECK.h;
-  c.clearRect(0, 0, W, H);
-  const vt = VIEW.tree; if (!vt || !vt.root || !VIEW.G || S.mode === 'diagram') return;
-  const sub = n => (vt.swap && n === vt.swap.from) ? vt.swap.to : n, root = sub(vt.root);
-  if (!vt._nb) vt._nb = neckBoxes(root, sub);
-  const NBX = vt._nb, LET = VIEW.letters || new Map(), last = VIEW.lastKey, fk = FOCUS && FOCUS.edge ? FOCUS.edge.key : null;
-  /* boxes in the order they are made (inside out for "Beads first"), wrapped into rows at the largest scale that fits */
-  const list = S.mode === 'global' && ORDER === 'beads' ? NBX.post : NBX.boxes, bh0 = NB.TOP + NB.ROW + NB.TAG + NB.BOT;
-  const wrap = sc => { const rows = [[]]; let x = 0; for (const q of list) { const w = q.w * sc; if (x > 0 && x + w > W - 12) { rows.push([]); x = 0; } rows[rows.length - 1].push(q); x += w + NB.GAPX * sc; } return rows; };
-  let sc = 1.5, rows = wrap(sc);
-  while (sc > 0.35 && (rows.length * bh0 * sc + (rows.length - 1) * NB.GAPY * sc > H - 10 || Math.max(...list.map(q => q.w)) * sc > W - 12)) { sc *= 0.93; rows = wrap(sc); }
-  const totH = rows.length * bh0 * sc + (rows.length - 1) * NB.GAPY * sc;
-  rows.forEach((r, k) => {
-    const rw = r.reduce((s2, q) => s2 + q.w * sc, 0) + NB.GAPX * sc * (r.length - 1);
-    let x = (W - rw) / 2; const y = Math.max(5, (H - totH) / 2) + k * (bh0 + NB.GAPY) * sc;
-    for (const q of r) { q.X = x; q.Y = y; x += (q.w + NB.GAPX) * sc; }
-  });
-  const fpx = px => Math.max(9, Math.round(px * Math.min(1.2, Math.max(0.8, sc))));
-  const mono = px => `${fpx(px)}px "IBM Plex Mono", monospace`, serif = px => `italic ${fpx(px)}px "Instrument Serif", serif`;
-  const partial = (pts, p) => { const n = pts.length - 1, m = Math.max(1, Math.round(n * p)); c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i <= m; i++) c.lineTo(pts[i][0], pts[i][1]); c.stroke(); };
-  /* a symbol with a subscript, e.g. t_B or u_B2 */
-  const sym = (t, s, x, y, col, align) => {
-    c.font = serif(14); const w1 = c.measureText(t).width; c.font = mono(9.5); const w2 = s ? c.measureText(s).width : 0;
-    const x0 = align === 'center' ? x - (w1 + w2 + 1) / 2 : x;
-    c.fillStyle = col; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
-    c.font = serif(14); c.fillText(t, x0, y); if (s) { c.font = mono(9.5); c.fillText(s, x0 + w1 + 1, y + 3); }
-  };
-  const tagSym = g => g.ext ? [g.t, '', TH.amber] : [g.t, (LET.get(g.P) || '?') + (g.s ? g.s : ''), g.t === 't' ? TH.violet : TH.muted];
-  c.lineCap = 'round'; c.lineJoin = 'round';
-  for (const q of NBX.boxes) {
-    const N = q.N, st = neckState(N, now), X = LET.get(N) || '?', bx = q.X, by = q.Y, bw = q.w * sc, bh = q.h * sc;
-    const yb = by + (NB.TOP + NB.ROW / 2) * sc, active = last && (last === 't' + N.uid || last.startsWith('b' + N.uid + '_'));
-    /* the box */
-    c.save();
-    if (!st.open) { c.setLineDash([4, 4]); c.strokeStyle = TH.line2; c.lineWidth = 1.1; }
-    else { c.fillStyle = `rgba(${TH.vrgb},${st.closed ? 0.07 : 0.03})`; c.strokeStyle = active ? HI() : st.closed ? `rgba(${TH.vrgb},0.55)` : TH.line2; c.lineWidth = active ? 2 : 1.1; }
-    c.beginPath(); c.roundRect ? c.roundRect(bx, by, bw, bh, 10) : c.rect(bx, by, bw, bh); if (st.open) c.fill(); c.stroke(); c.restore();
-    c.font = mono(11); c.textAlign = 'left'; c.textBaseline = 'top'; c.fillStyle = st.open ? TH.fg : TH.muted;
-    let head = st.closed ? T(`${X} ✓ 1PI`, `${X} ✓ 1PI`) : st.open ? X : T(`${X} · ${N.n} legs · ${plural(N.L, 'loop')}`, `${X} · ${N.n} 腿 · ${N.L} 圈`);
-    if (c.measureText(head).width > bw - 12 * sc) head = st.open ? X : T(`${X} · ${N.L}L`, `${X} · ${N.L} 圈`);
-    if (c.measureText(head).width > bw - 12 * sc) head = X;
-    c.fillText(head, bx + 7 * sc, by + 5 * sc);
-    if (st.closed) { const note = q.P ? T(`bead of ${LET.get(q.P)}`, `${LET.get(q.P)} 的珠子`) : T('the diagram', '整张图'); if (c.measureText(head).width + c.measureText(note).width + 24 * sc < bw) { c.fillStyle = TH.muted; c.textAlign = 'right'; c.fillText(note, bx + bw - 7 * sc, by + 5 * sc); } }
-    /* bead positions and their two attachment points */
-    const pos = q.slots.map(sl => { const cx = bx + (sl.x + sl.w / 2) * sc; return sl.ch ? { cx, a: cx - 15 * sc, b: cx + 15 * sc } : { cx, a: cx, b: cx }; });
-    /* threads */
-    for (let k = 0; k < N.bridges.length; k++) {
-      const key = 'b' + N.uid + '_' + k, p = revealP(key, now); if (p <= 0) continue;
-      c.strokeStyle = fk === key ? TH.amber : last === key ? HI() : TH.muted; c.lineWidth = Math.max(1.2, (last === key || fk === key ? 3 : 1.9) * Math.min(1.2, sc));
-      partial([[pos[k].b, yb], [pos[k + 1].a, yb]], p);
-      if (p >= 1 && st.open && pos[k + 1].a - pos[k].b > 24) sym('u', X + (k + 1), (pos[k].b + pos[k + 1].a) / 2, yb + 15 * Math.min(1.2, sc), last === key ? HI() : TH.muted, 'center');
-    }
-    /* clasp */
-    if (st.tp > 0) {
-      const A = [pos[0].a, yb], B = [pos[pos.length - 1].b, yb], top = by + 26 * sc, key = 't' + N.uid;
-      const pts = Array.from({ length: 25 }, (_, i) => { const t = i / 24, u = 1 - t; return [u * u * u * A[0] + 3 * u * u * t * A[0] + 3 * u * t * t * B[0] + t * t * t * B[0], u * u * u * A[1] + 3 * u * u * t * top + 3 * u * t * t * top + t * t * t * B[1]]; });
-      c.strokeStyle = fk === key ? TH.amber : last === key ? HI() : TH.violet; c.lineWidth = Math.max(1.8, (last === key || fk === key ? 3.6 : 2.8) * Math.min(1.2, sc));
-      partial(pts, st.tp);
-      if (st.tp >= 1) sym('t', X, pts[12][0], pts[12][1] - 3, c.strokeStyle, 'center');
-    }
-    /* beads and the tags on their legs */
-    q.slots.forEach((sl, i) => {
-      const P = pos[i], tagY = yb + (NB.ROW / 2 + 26) * sc;
-      if (!sl.ch) {
-        if (!st.open) { c.strokeStyle = TH.line2; c.lineWidth = 1; c.beginPath(); c.arc(P.cx, yb, 3.2, 0, Math.PI * 2); c.stroke(); return; }
-        const g = NBX.tag(N, sl.b.label), [t, s, col] = tagSym(g);
-        c.strokeStyle = col; c.lineWidth = g.ext ? 2 : 1.1; c.beginPath(); c.moveTo(P.cx, yb); c.lineTo(P.cx, tagY - 11 * Math.min(1.2, sc)); c.stroke();
-        sym(t, s, P.cx, tagY, col, 'center');
-        c.fillStyle = TH.fg; c.beginPath(); c.arc(P.cx, yb, Math.max(2.6, 3.6 * Math.min(1.2, sc)), 0, Math.PI * 2); c.fill();
-        return;
-      }
-      const cs = neckState(sl.ch, now), CX = LET.get(sl.ch) || '?', rx = 15 * sc, ry = 9.5 * sc;
-      c.save(); c.beginPath(); c.ellipse(P.cx, yb, rx, ry, 0, 0, Math.PI * 2);
-      if (cs.closed) { c.fillStyle = `rgba(${TH.vrgb},${TH.dark ? 0.45 : 0.3})`; c.fill(); c.strokeStyle = TH.violet; c.lineWidth = 1.4; c.stroke(); }
-      else { c.setLineDash([3, 3]); c.strokeStyle = cs.open ? TH.violet : TH.line2; c.lineWidth = 1.1; c.stroke(); }
-      c.restore();
-      c.font = mono(11); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = cs.closed ? TH.fg : TH.muted; c.fillText(CX, P.cx, yb + 0.5);
-      if (!st.open) return;
-      const pend = sl.b.labels;   /* the bead's own pendants: its legs 2, 3, ... */
-      pend.forEach((lab, j) => {
-        const px = P.cx + (j - (pend.length - 1) / 2) * NB.VS * sc * 0.9, g = NBX.tag(N, lab), [t, s, col] = tagSym(g);
-        c.strokeStyle = col; c.lineWidth = g.ext ? 2 : 1.1; c.beginPath(); c.moveTo(P.cx + (px - P.cx) * 0.5, yb + ry * 0.8); c.lineTo(px, tagY - 11 * Math.min(1.2, sc)); c.stroke();
-        sym(t, s, px, tagY, col, 'center');
-      });
-    });
-  }
-}
-
 /* hovering an edge of the diagram lights up its ring and its arc in the tree */
 let GRAPHHIT = null;
 const cvGraph = document.getElementById('cvGraph');
@@ -2236,8 +2100,8 @@ function* globalNarratedBeads() {
   VIEW.plan = true;
   setRich(pText, T('A bar appears as each edge is drawn; the amber loop markers come at the Weight step.', '每画一条边就出现一根柱；琥珀色的闭圈标记在“权重”一步出现。'));
   const LET = VIEW.letters, extK = new Set(d.G.ext.map(v => d.G.vkey[v])), plan = chainPlan(d.root, LET, extK);
-  narr(0, `Beads first. The tables fix only the sizes first: at every level, how many beads there are and how the ${S.L} loops and the 2 pendants are shared out (the dashed outlines). Necklace A: ${plan.en}. Then every bead is finished as a smaller 1PI diagram, innermost first, before it is strung.`,
-    `先串珠子。先由表只定下大小：每一层有几颗珠子，${S.L} 个圈和 2 个吊坠怎么分（虚线轮廓）。项链 A：${plan.zh}。然后每颗珠子先做成一个更小的 1PI 图（从最里面开始），再穿到线上。`,
+  narr(0, `Beads first. The tables fix only the sizes first: at every level, how many beads there are and how the ${S.L} loops and the 2 pendants are shared out (the dashed rings in the tree). Necklace A: ${plan.en}. Then every bead is finished as a smaller 1PI diagram, innermost first, before it is strung.`,
+    `先串珠子。先由表只定下大小：每一层有几颗珠子，${S.L} 个圈和 2 个吊坠怎么分（递推树里虚线的环）。项链 A：${plan.zh}。然后每颗珠子先做成一个更小的 1PI 图（从最里面开始），再穿到线上。`,
     '$ω_δ(n,L)\\,P_n(L) = \\frac{1}{2}\\,\\text{ch}(n, L−1)$');
   setTreeInfo('Dashed: the plan. Each ring is filled in from the inside out.', '虚线：计划。每个环从里往外填满。');
   yield pace(2600);
@@ -2701,7 +2565,7 @@ function tick(now) {
   if (CELLS.dirty) recomputeCells();
   for (let i = 0; i < CELLS.cur.length; i++) CELLS.cur[i] += ((CELLS.tgt[i] ?? 1) - CELLS.cur[i]) * 0.12;
   if (VIEW.G && now < (VIEW.relaxUntil || 0)) relax(VIEW.G, POS, 2);
-  drawFan(now); drawGraph(now, GR); drawGraph(now, GR2); drawTree(now, TR); drawTree(now, TR2); drawNecklace(now); drawParams(now); drawSched(); drawHist(now); updateDiagrams(now);
+  drawFan(now); drawGraph(now, GR); drawGraph(now, GR2); drawTree(now, TR); drawTree(now, TR2); drawParams(now); drawSched(); drawHist(now); updateDiagrams(now);
   if (now - lastTable > 250) { updateTable(); lastTable = now; }
 }
 
