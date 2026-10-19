@@ -225,6 +225,19 @@ footer{font-size:12.5px;color:var(--faint);max-width:90ch}
 }
 math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math","Noto Sans Math",math;font-size:1.07em}
 .mono math,.status math{font-size:1.12em}
+.ulist{display:grid;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px}
+.ulist h4{margin:0;font:500 14px var(--f-body);color:var(--fg)}
+.ulist .muted{color:var(--muted);font-size:12.5px}
+.achips{display:flex;flex-wrap:wrap;gap:5px 6px}
+.achip{display:inline-flex;align-items:center;padding:1px 8px;border:1px solid var(--line-2);border-radius:999px;font-size:12.5px;color:var(--muted)}
+.achip.clo{border-color:var(--violet);background:rgba(var(--violet-rgb),.12);color:var(--fg)}
+.achip.new{box-shadow:0 0 0 2px rgba(var(--new-rgb),.55)}
+.achip.todo{border-style:dashed;opacity:.6}
+.ulist .eq{overflow-x:auto;padding-bottom:2px}
+.ulist table{font-size:13px;min-width:0}
+.ulist th,.ulist td{padding:5px 8px}
+.ulist td:first-child,.ulist th:first-child{text-align:left}
+.ulist tr.utr td{color:var(--fg);background:rgba(var(--violet-rgb),.08)}
 .btn.small{padding:5px 10px;font-size:12px;border-radius:999px;margin-left:6px;vertical-align:baseline}
 .dg tbody tr.sel{box-shadow:inset 3px 0 0 var(--violet)}
 /* estimates + spread side by side only when the table fits; short method names when the dock gets tight */
@@ -404,6 +417,7 @@ math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math","Noto Sans M
       </figure>
     </div>
     <p class="status" id="pText"></p>
+    <div class="ulist only-diagram" id="uList" aria-live="polite"></div>
     <div class="legend">
       <span class="no-diagram"><span class="sw v"></span><span class="en">top edge of a ring (letter = the ring)</span><span class="zh">环的顶边（字母 = 那个环）</span></span>
       <span class="no-diagram"><span class="sw m"></span><span class="en">bridge</span><span class="zh">桥</span></span>
@@ -526,7 +540,7 @@ math{font-family:"STIX Two Math","Latin Modern Math","Cambria Math","Noto Sans M
 const escH = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 function tex2mml(s) {
   let i = 0;
-  const OPS = '=+−-·×/()[],;:≤≥≈∝∈∖→←∼⋯!|<>⟨⟩≪≫%↔';
+  const OPS = '=+−-·×/()[],;:≤≥≈∝∈∉∖→←∼⋯!|<>⟨⟩≪≫%↔';
   const arg = () => { while (s[i] === ' ') i++; if (s[i] === '{') { i++; const g = seq(); i++; return '<mrow>' + fence(g) + '</mrow>'; } return atom() || '<mrow></mrow>'; };
   const fence = g => /^<mo stretchy="false">[(\[]<\/mo>/.test(g) && /<mo stretchy="false">[)\]]<\/mo>$/.test(g) ? g.replace(/^<mo stretchy="false">/, '<mo>').replace(/<mo stretchy="false">([)\]])<\/mo>$/, '<mo>$1</mo>') : g;
   function atom() {
@@ -2176,6 +2190,7 @@ function selectDiagram(cls) {
   setRich(pText, msg(P_DEFAULT));
   DG.dirty = true; DG.last = 0; HIST.dirty = true; lastTable = 0;
   if (S.speed === 'bulk') introNarr();
+  updateUList();
 }
 function pickDefaultDiagram(prefer) {
   if (S.L > DIAG_LMAX) return;
@@ -2208,16 +2223,65 @@ function diagExact(D) {
   if (D.L === 2) return D.aut.multi ? { v: Math.PI / 9, name: 'π/9' } : { v: Math.PI / 18, name: 'π/18' };
   return null;
 }
+/* all monomials of U for this draw: one per spanning tree T, the product of the L alphas left out of T.
+   An L-subset S of edges is such a complement exactly when the other E - L = V - 1 edges have no loop. */
+function uTerms(D, d) {
+  if (d._terms) return d._terms;
+  const E = D.E, L = D.L, full = D.full, terms = [];
+  let m = (1 << L) - 1;
+  while (m < (1 << E)) {
+    if (D.loops[full ^ m] === 0) { let l = 0, r = m; while (r) { const b = r & -r; r ^= b; l += d.la[31 - Math.clz32(b)]; } terms.push({ m, l }); }
+    const c = m & -m, r = m + c; m = r | (((r ^ m) >>> 2) / c);
+  }
+  terms.sort((a, b) => b.l - a.l);
+  const top = terms.length ? terms[0].l : 0; let sum = 0; for (const t of terms) sum += Math.exp(t.l - top);
+  d._terms = { terms, lU: top + Math.log(sum) };
+  if (Math.abs(d._terms.lU - d.lU) > 1e-8 * Math.max(1, Math.abs(d.lU))) console.warn('U from spanning trees differs from the determinant', d._terms.lU, d.lU);
+  return d._terms;
+}
+const uList = document.getElementById('uList');
+function updateUList() {
+  const D = DGM.D, d = DGM.cur;
+  if (S.mode !== 'diagram') return;
+  if (!D || !d) { setRich(uList, T('The $α$ of each edge, and which of them enter $U^{tr}$ and $U$, appear here as the edges are drawn.', '每条边的 $α$，以及哪些进入 $U^{tr}$ 和 $U$，会在画边时出现在这里。')); return; }
+  const E = D.E, rev = Math.min(DGM.rev, E), done = rev >= E && VIEW.showClosing;
+  const a = e => fu(Math.exp(d.la[e])), sub = e => `α_{${e + 1}}`;
+  let h = `<h4>${rich(T('Which $α$ enter $U^{tr}$ and $U$', '哪些 $α$ 进入 $U^{tr}$ 和 $U$'))}</h4>`;
+  h += `<p class="muted">${rich(T('The $α$ of this draw, largest first. Violet: the edge closes a loop of what is left, so its $α$ is a factor of $U^{tr}$; gray: it stays in the spanning tree.', '这个样本的 $α$，从大到小。紫色：这条边闭合剩余部分的一个圈，它的 $α$ 是 $U^{tr}$ 的因子；灰色：它留在生成树里。'))}</p>`;
+  const sig = Array.from(d.sig);
+  h += '<div class="achips">' + sig.map((e, k) => k < rev
+    ? `<span class="achip${d.clo[k] ? ' clo' : ''}${k === rev - 1 && !done ? ' new' : ''}">${rich(`$${sub(e)} = ${a(e)}$`)}</span>`
+    : `<span class="achip todo">${rich(`$${sub(e)}$`)}</span>`).join('') + '</div>';
+  const cl = sig.map((e, k) => ({ e, k })).filter(q => q.k < rev && d.clo[q.k]);
+  if (cl.length) {
+    const prod = cl.reduce((s, q) => s + d.la[q.e], 0);
+    h += `<div class="eq">${rich(`$U^{tr} = ${cl.map(q => sub(q.e)).join('\\,')} = ${cl.map(q => a(q.e)).join(' × ')} = ${fmt(Math.exp(prod), 4)}$` + (cl.length < D.L ? T(` (so far: ${cl.length} of ${D.L} loops)`, `（目前 ${cl.length}/${D.L} 个圈）`) : ''))}</div>`;
+  }
+  if (done) {
+    const { terms, lU } = uTerms(D, d), U = Math.exp(lU), K = Math.min(5, terms.length);
+    h += `<p class="muted">${rich(T(`$U = Σ_T Π_{e∉T} α_e$ sums over all ${terms.length.toLocaleString('en-US')} spanning trees $T$ of the diagram; each term multiplies the ${D.L} $α$ left out of $T$. The largest terms:`, `$U = Σ_T Π_{e∉T} α_e$ 对这张图的全部 ${terms.length.toLocaleString('en-US')} 棵生成树 $T$ 求和，每一项是不在 $T$ 里的 ${D.L} 个 $α$ 之积。最大的几项：`))}</p>`;
+    h += `<div class="tablewrap"><table><thead><tr><th>${T('term', '项')}</th><th>${T('value', '值')}</th><th>${rich(T('share of $U$', '占 $U$ 的比例'))}</th></tr></thead><tbody>`;
+    for (let i = 0; i < K; i++) {
+      const t = terms[i], ids = []; let r = t.m; while (r) { const b = r & -r; r ^= b; ids.push(31 - Math.clz32(b)); }
+      ids.sort((x, y) => d.la[y] - d.la[x]);
+      h += `<tr${i === 0 ? ' class="utr"' : ''}><td>${rich(`$${ids.map(sub).join('\\,')}$`)}${i === 0 ? rich(T(' $= U^{tr}$', ' $= U^{tr}$')) : ''}</td><td class="mono">${fmt(Math.exp(t.l), 4)}</td><td class="mono">${(100 * Math.exp(t.l - lU)).toFixed(1)}%</td></tr>`;
+    }
+    if (terms.length > K) h += `<tr><td>${rich(T(`the other ${(terms.length - K).toLocaleString('en-US')} terms`, `其余 ${(terms.length - K).toLocaleString('en-US')} 项`))}</td><td class="mono">${fmt(U - terms.slice(0, K).reduce((s, t) => s + Math.exp(t.l), 0), 4)}</td><td class="mono">${(100 * (1 - terms.slice(0, K).reduce((s, t) => s + Math.exp(t.l - lU), 0))).toFixed(1)}%</td></tr>`;
+    h += `<tr><td>${rich(T('all terms: $U$', '全部之和：$U$'))}</td><td class="mono">${fmt(U, 4)}</td><td class="mono">100%</td></tr></tbody></table></div>`;
+    h += `<div class="eq">${rich(`$\\frac{U^{tr}}{U} = ${fmt(Math.exp(d.lUtr - lU), 4)}, \\quad (Σ_e α_e)^{−ω} = ${fmt(Math.exp(-D.omG * d.lsa), 4)}, \\quad w = {(\\frac{U^{tr}}{U})}^{3/2}(Σ_e α_e)^{−ω} = ${fmt(Math.exp(d.logw), 4)}$`)}</div>`;
+  }
+  if (uList.__src !== h) { uList.__src = h; uList.innerHTML = h; }
+}
 function showDiagDraw(d) {
   DGM.cur = d; DGM.rev = DGM.D.E;
-  setView(d.G, { Wt: d.Wt, showClosing: true }); VIEW.lastKey = null; setWeight(d.Wt); paramsSummary();
+  setView(d.G, { Wt: d.Wt, showClosing: true }); VIEW.lastKey = null; setWeight(d.Wt); paramsSummary(); updateUList();
 }
 function* diagNarrated() {
   const D = DGM.D;
   if (!D) { yield 500; return; }
   const d = diagDraw(D, true), E = D.E, id = DGM.cls.id + 1, NS = (2 ** E).toLocaleString('en-US');
   DGM.cur = d; DGM.rev = 0;
-  setView(d.G, { hidden: true, Wt: d.Wt, showClosing: false }); VIEW.lastKey = null; setWeight(null);
+  setView(d.G, { hidden: true, Wt: d.Wt, showClosing: false }); updateUList(); VIEW.lastKey = null; setWeight(null);
   setRich(pText, T('A bar appears as each edge is drawn, largest first; the amber loop markers come at the Weight step.', '每画一条边就出现一根柱（从大到小）；琥珀色的闭圈标记在“权重”一步出现。'));
   narr(0, `Diagram #${id} stays fixed: ${E} edges, ${plural(D.L, 'loop')}. Its table $J(γ)$ over all $2^{${E}} = ${NS}$ edge subsets was built once (${D.ms.toFixed(0)} ms). A draw orders the ${E} edges from largest to smallest, a Hepp sector (one of $${E}! = ${fmt(Math.exp(lgamma(E + 1)), 3)}$), then draws their ratios.`,
     `图 #${id} 保持不变：${E} 条边，${D.L} 个圈。它在全部 $2^{${E}} = ${NS}$ 个边子集上的表 $J(γ)$ 只算一次（${D.ms.toFixed(0)} 毫秒）。每个样本先把 ${E} 条边从大到小排序，即一个 Hepp 扇区（共 $${E}! = ${fmt(Math.exp(lgamma(E + 1)), 3)}$ 个），再抽它们之间的比值。`,
@@ -2226,7 +2290,7 @@ function* diagNarrated() {
   const per = Math.min(1, 14 / E);
   for (let k = 0; k < E; k++) {
     const e = d.sig[k], key = 'e' + e, a = Math.exp(d.la[e]), m = d.masks[k], left = E - k, om = D.om[m], Lb = D.loops[m];
-    VIEW.reveal.set(key, performance.now()); VIEW.lastKey = key; DGM.rev = k + 1;
+    VIEW.reveal.set(key, performance.now()); VIEW.lastKey = key; DGM.rev = k + 1; updateUList();
     if (k === 0) {
       const p = d.steps[0].p;
       narr(1, `The largest edge: edge ${e + 1}, drawn with probability $\\frac{J(G∖e)}{ω(G∖e)\\,J(G)} = ${pct(p).replace('%', '\\%')}$ (its wedge on the fan). Its $α$ is set to 1: the integral is projective, so only ratios matter. A 1PI diagram has no bridges, so this edge closes a loop and its $α$ is a factor of $U^{tr}$.`,
@@ -2246,7 +2310,7 @@ function* diagNarrated() {
     yield pace(last ? 900 : 700 * per + 800);
   }
   VIEW.lastKey = null; VIEW.showClosing = true; VIEW.Wt = d.Wt; setWeight(d.Wt); paramsSummary();
-  addDiag(d);
+  addDiag(d); updateUList();
   const e = estD(), w = Math.exp(d.logw), x2 = D.mult === 2;
   narr(3, `Weight: $w = {(\\frac{U^{tr}}{U})}^{3/2}\\,(Σ_e α_e)^{−ω} = ${fmt(w, 4)} ≤ 1$. $U^{tr}$ multiplies the $α$ of the ${D.L} violet edges. This sector had probability ${fmt(Math.exp(d.lpSec), 3)}. After ${DGM.acc.n.toLocaleString('en-US')} draws, $ŝ_G = ${x2 ? '2\\,' : ''}\\frac{Γ(ω)\\,J(G)}{|\\text{Aut}\\,G|}\\,\\text{mean}(w) = ${e ? fmt(e.s, 6) : '—'}$.`,
     `权重：$w = {(\\frac{U^{tr}}{U})}^{3/2}\\,(Σ_e α_e)^{−ω} = ${fmt(w, 4)} ≤ 1$。$U^{tr}$ 是 ${D.L} 条紫色边的 $α$ 之积。这个扇区的概率是 ${fmt(Math.exp(d.lpSec), 3)}。${DGM.acc.n} 个样本之后，$ŝ_G = ${x2 ? '2\\,' : ''}\\frac{Γ(ω)\\,J(G)}{|\\text{Aut}\\,G|}\\,\\text{mean}(w) = ${e ? fmt(e.s, 6) : '—'}$。`,
@@ -2522,7 +2586,7 @@ function applyLang() {
   setRich(treeInfo, msg(TREEMSG));
   if (!(FOCUS && FOCUS.edge)) { if (VIEW.Wt && VIEW.showClosing && VIEW.G) paramsSummary(); else setRich(pText, msg(P_DEFAULT)); }
   if (VIEW.Wt && VIEW.showClosing) setWeight(VIEW.Wt); else setWeight(null);
-  inspRefresh(); updateGmeta(); updateTable(); HIST.dirty = true; HIST.last = 0; DG.dirty = true; DG.last = 0;
+  inspRefresh(); updateGmeta(); updateTable(); updateUList(); HIST.dirty = true; HIST.last = 0; DG.dirty = true; DG.last = 0;
 }
 document.querySelectorAll('#segLang button').forEach(b => b.addEventListener('click', () => {
   LANG = b.dataset.v; try { localStorage.setItem('tfs-lang', LANG); } catch (e) {}
