@@ -447,7 +447,7 @@ html:not([data-order="beads"]) .order-beads{display:none!important}
             <tr id="rowD" class="only-diagram"><th scope="row"><span class="sw v"></span><span class="en">Diagram tropical</span><span class="zh">单图热带</span></th><td class="big mono">—</td><td class="mono">—</td><td>—</td><td class="mono">0</td><td class="mono">—</td><td class="mono">—</td></tr>
             <tr id="rowDG" class="only-diagram"><th scope="row"><span class="sw a"></span><span class="en">Global tropical, this diagram</span><span class="zh">全局热带，这张图</span></th><td class="big mono">—</td><td class="mono">—</td><td>—</td><td class="mono">0</td><td class="mono">—</td><td class="mono">—</td></tr>
             <tr id="rowG" class="no-diagram"><th scope="row"><span class="sw a"></span><span class="en">Global tropical</span><span class="zh">全局热带</span></th><td class="big mono">—</td><td class="mono">—</td><td>—</td><td class="mono">0</td><td class="mono">—</td><td class="mono">—</td></tr>
-            <tr id="rowA" class="no-diagram"><th scope="row"><span class="sw t"></span><span class="en">Annealed importance sampling</span><span class="zh">退火重要性采样</span></th><td class="big mono">—</td><td class="mono">—</td><td>—</td><td class="mono">0</td><td class="mono">—</td><td class="mono">—</td></tr>
+            <tr id="rowA" class="no-diagram"><th scope="row"><span class="sw t"></span><span class="en">Annealed tropical</span><span class="zh">退火热带</span></th><td class="big mono">—</td><td class="mono">—</td><td>—</td><td class="mono">0</td><td class="mono">—</td><td class="mono">—</td></tr>
           </tbody>
         </table>
       </div>
@@ -458,7 +458,7 @@ html:not([data-order="beads"]) .order-beads{display:none!important}
       <div class="card-head"><h2><span class="en">Log-weight spread</span><span class="zh">权重分布</span></h2></div>
       <canvas id="cvHist" role="img" aria-label="Histogram of log w for global sampling and log W for AIS"></canvas>
       <p class="hint mono" id="histMeta"></p>
-      <p class="hint no-diagram"><span class="en">Amber: $\text{log}\,w$ of independent tropical draws. Teal: $\text{log}\,W$ of annealed-importance-sampling runs. A narrower teal curve is the whole point of annealing.</span><span class="zh">琥珀色是独立热带样本的 $\text{log}\,w$，青色是退火重要性采样的 $\text{log}\,W$；青色更窄就是退火的意义。</span></p>
+      <p class="hint no-diagram"><span class="en">Amber: $\text{log}\,w$ of independent tropical draws. Teal: $\text{log}\,W$ of annealed tropical runs. A narrower teal curve is the whole point of annealing.</span><span class="zh">琥珀色是独立热带样本的 $\text{log}\,w$，青色是退火热带各轮的 $\text{log}\,W$；青色更窄就是退火的意义。</span></p>
       <p class="hint only-diagram"><span class="en">Amber: $\text{log}\,w$ of global tropical draws, all diagrams together. Violet: $\text{log}\,w$ of diagram tropical draws of the chosen diagram. These are different weights: $(U^{tr}/U)^{3/2}\,Π_e u_e^{δ}$ on the cube for the first, $(U^{tr}/U)^{3/2}\,(Σ_e α_e)^{−ω}$ on one projective diagram for the second.</span><span class="zh">琥珀色是全局热带样本的 $\text{log}\,w$，所有图放在一起；紫色是所选图的单图热带样本的 $\text{log}\,w$。两者是不同的权重：前者是立方体上的 $(U^{tr}/U)^{3/2}\,Π_e u_e^{δ}$，后者是单张图射影坐标下的 $(U^{tr}/U)^{3/2}\,(Σ_e α_e)^{−ω}$。</span></p>
     </div>
   </section>
@@ -500,7 +500,7 @@ html:not([data-order="beads"]) .order-beads{display:none!important}
       <p class="math">$ω_δ(n,L)\,P_n(L) = \frac{1}{2}\,\text{ch}(n, L−1), \quad ŝ_L = P_2(L)\,\text{mean}(w)$</p>
     </article>
     <article class="card only-ais">
-      <h3><span class="en">Annealed importance sampling</span><span class="zh">退火重要性采样</span></h3>
+      <h3><span class="en">Annealed tropical</span><span class="zh">退火热带</span></h3>
       <p class="en">Start from one exact tropical draw and raise $β$ from 0 to 1 in $K$ steps, banking $Δβ\,\text{log}\,w$ at each step. In between, Markov moves leave $μ_δ\,w^β$ invariant: regrow a whole subtree from the exact tropical rule (a jump to another wedge), or redraw one edge (same wedge). Accept with $(w′/w)^β$.</p>
       <p class="zh">从一个精确的热带样本出发，用 $K$ 步把 $β$ 从 0 升到 1，每步记下 $Δβ\,\text{log}\,w$。中间用保持 $μ_δ\,w^β$ 不变的马尔可夫移动：按精确热带规则重长一整棵子树（跳到另一个楔形），或重抽一条边（留在同一楔形）。接受率 $(w′/w)^β$。</p>
       <p class="math">$E[W] = \frac{s_L}{P_2(L)}\ \text{for every}\ K, \quad \text{Var}\,\text{log}\,W ≈ V_f + \frac{c}{K}$</p>
@@ -508,8 +508,8 @@ html:not([data-order="beads"]) .order-beads{display:none!important}
   </section>
 
   <footer>
-    <p class="en">This page runs JavaScript ports of the three samplers described in I. Moult and B. Wang, “Instanton Structure from 325-Loop 3D φ³ Perturbation Theory”: diagram tropical sampling of one diagram (the table $J$ over its $2^E$ edge subsets), the global tropical sampler (exact tables, top-edge generator, Kron reduction for $U$) and the annealed-importance-sampling kernel (subtree regrowth, bridge and top-edge redraws). It is a teaching copy, not the production code. Reference values $s_L$ are those tabulated in the paper (exact for $L = 1, 2$). Diagrams are identified up to isomorphism, with the two external legs treated as a pair, by a canonical form (colour refinement with edge multiplicities, plus individualization). The fan is a schematic: each global or annealed draw is placed in one of five cones by its diagram number, and its angle inside the cone summarizes the diagram’s shape (the mean of $u/t$ over its edges). In diagram tropical mode the sector map is exact.</p>
-    <p class="zh">本页在浏览器里运行 I. Moult 与 B. Wang 的论文 “Instanton Structure from 325-Loop 3D φ³ Perturbation Theory” 中三种采样器的 JavaScript 移植版：单图热带采样（一张图的 $2^E$ 个边子集上的表 $J$）、全局热带采样器（精确表、顶边生成器、用 Kron 约化计算 $U$）和退火重要性采样核（子树重生成、桥和顶边重抽）。它是教学用的副本，不是生产代码。参考值 $s_L$ 取自论文中的表格（$L = 1$、$2$ 为精确值）。图按同构类区分（两条外腿视为一对），用的是规范形式（考虑边重数的颜色细化加个体化）。扇是示意图：全局和退火的每个样本按图的编号放进五个锥之一，锥内的角度概括图的形状（各边 $u/t$ 的平均值）。单图热带模式中的扇区图是精确的。</p>
+    <p class="en">This page runs JavaScript ports of the three samplers described in I. Moult and B. Wang, “Instanton Structure from 325-Loop 3D φ³ Perturbation Theory”: diagram tropical sampling of one diagram (the table $J$ over its $2^E$ edge subsets), the global tropical sampler (exact tables, top-edge generator, Kron reduction for $U$) and the annealed tropical sampler (annealed importance sampling with subtree regrowth, bridge and top-edge redraws). It is a teaching copy, not the production code. Reference values $s_L$ are those tabulated in the paper (exact for $L = 1, 2$). Diagrams are identified up to isomorphism, with the two external legs treated as a pair, by a canonical form (colour refinement with edge multiplicities, plus individualization). The fan is a schematic: each global or annealed draw is placed in one of five cones by its diagram number, and its angle inside the cone summarizes the diagram’s shape (the mean of $u/t$ over its edges). In diagram tropical mode the sector map is exact.</p>
+    <p class="zh">本页在浏览器里运行 I. Moult 与 B. Wang 的论文 “Instanton Structure from 325-Loop 3D φ³ Perturbation Theory” 中三种采样器的 JavaScript 移植版：单图热带采样（一张图的 $2^E$ 个边子集上的表 $J$）、全局热带采样器（精确表、顶边生成器、用 Kron 约化计算 $U$）和退火热带采样器（退火重要性采样：子树重生成、桥和顶边重抽）。它是教学用的副本，不是生产代码。参考值 $s_L$ 取自论文中的表格（$L = 1$、$2$ 为精确值）。图按同构类区分（两条外腿视为一对），用的是规范形式（考虑边重数的颜色细化加个体化）。扇是示意图：全局和退火的每个样本按图的编号放进五个锥之一，锥内的角度概括图的形状（各边 $u/t$ 的平均值）。单图热带模式中的扇区图是精确的。</p>
   </footer>
 </div>
 
@@ -517,7 +517,7 @@ html:not([data-order="beads"]) .order-beads{display:none!important}
   <div class="seg" id="segMode" role="group" aria-label="Method">
     <button type="button" data-v="diagram" aria-pressed="false"><span class="en"><span class="lg">Diagram tropical</span><span class="sh">Diagram</span></span><span class="zh"><span class="lg">单图热带</span><span class="sh">单图</span></span></button>
     <button type="button" data-v="global" aria-pressed="true"><span class="en"><span class="lg">Global tropical</span><span class="sh">Global</span></span><span class="zh"><span class="lg">全局热带</span><span class="sh">全局</span></span></button>
-    <button type="button" data-v="ais" aria-pressed="false"><span class="en"><span class="lg">Annealed importance sampling</span><span class="sh">Annealed</span></span><span class="zh"><span class="lg">退火重要性采样</span><span class="sh">退火</span></span></button>
+    <button type="button" data-v="ais" aria-pressed="false"><span class="en"><span class="lg">Annealed tropical</span><span class="sh">Annealed</span></span><span class="zh"><span class="lg">退火热带</span><span class="sh">退火</span></span></button>
   </div>
   <div class="seg" id="segSpeed" role="group" aria-label="Speed">
     <button type="button" data-v="slow" aria-pressed="true"><span class="en">Slow</span><span class="zh">慢</span></button>
@@ -2582,7 +2582,7 @@ function introNarr() {
     return;
   }
   if (S.speed === 'bulk') { setStep(-1); narr(-1, 'Bulk mode: thousands of samples per second with no narration. The panels show a recent sample every second or two. Switch to Slow to follow one sample step by step.', '批量模式：每秒几千个样本，没有解说；各面板每一两秒显示一个最近的样本。切换到“慢”可一步一步跟随一个样本。', S.mode === 'ais' ? '$E[W] = s_L/P_2(L)$' : '$s_L = P_2(L)\\,E_μ[w]$'); return; }
-  if (S.mode === 'ais') narr(-1, 'Annealed importance sampling: one chain per run, walked from the tropical measure to the true one.', '退火重要性采样：每轮一条链，从热带测度走到真实测度。', '$π_β ∝ μ_δ\\,w^β, \\quad β: 0 → 1$');
+  if (S.mode === 'ais') narr(-1, 'Annealed tropical sampling: one chain per run, walked from the tropical measure to the true one.', '退火热带采样：每轮一条链，从热带测度走到真实测度。', '$π_β ∝ μ_δ\\,w^β, \\quad β: 0 → 1$');
   else if (ORDER === 'beads') narr(-1, 'Beads first: the same exact draws, told from the inside out. The sizes are fixed first; then every smaller 1PI diagram is strung and clasped before the necklace around it.', '先串珠子：同样精确的抽样，从里往外讲。先定下大小，然后每个更小的 1PI 图先穿好、扣好，再挂进外一层的项链。', '$ω_δ(n,L)\\,P_n(L) = \\frac{1}{2}\\,\\text{ch}(n, L−1)$');
   else narr(-1, 'Global tropical sampling: independent exact draws from the tropical measure, each reweighted by $w$.', '全局热带采样：从热带测度独立精确抽样，每个样本用 $w$ 加权。', '$s_L = P_2(L)\\,E_μ[w]$');
 }
