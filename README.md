@@ -28,7 +28,7 @@ and go to <http://localhost:8000/>.
 
 ## Paper
 
-I. Moult and B. Wang, *Instanton Structure from 325-Loop 3D φ³ Perturbation Theory*, arXiv:XXXX.XXXXX (to be added).
+I. Moult and B. Wang, *Instanton Structure from 325-Loop 3D φ³ Perturbation Theory*, [arXiv:2610.36025](https://arxiv.org/abs/2610.36025).
 
 ## License
 
